@@ -1,0 +1,24 @@
+{
+  "name": "soundboard-webapp",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "node ./node_modules/typescript/lib/tsc.js -b . --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Dj-Viking/soundboard-webapp.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Dj-Viking/soundboard-webapp/issues"
+  },
+  "homepage": "https://github.com/Dj-Viking/soundboard-webapp#readme",
+  "dependencies": {
+    "@types/node": "^20.10.5",
+    "typescript": "^5.3.3"
+  }
+}
