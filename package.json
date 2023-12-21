@@ -3,8 +3,10 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "dev": "node ./node_modules/typescript/lib/tsc.js -b . --watch"
+    "dev": "node ./node_modules/typescript/lib/tsc.js -b . --watch",
+    "server": "ts-node --esm ./server/server.ts"
   },
   "repository": {
     "type": "git",
@@ -19,6 +21,7 @@
   "homepage": "https://github.com/Dj-Viking/soundboard-webapp#readme",
   "dependencies": {
     "@types/node": "^20.10.5",
+    "ts-node": "10.9.2",
     "typescript": "^5.3.3"
   }
 }

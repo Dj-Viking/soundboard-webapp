@@ -17,13 +17,15 @@ catch {
     Write-Host "[ERROR]: could not start node process to watch changes" -ForegroundColor Red;
 }
 finally {
-    # open the browser
-    Write-Host "[INFO]: opening browser page located at $($root)\dist\app\index.html" -ForegroundColor Cyan;
+    # start the static file server
+    # type="module" can't be used from file protocol
+    Write-Host "[INFO]: starting static file server" -ForegroundColor Cyan;
 
     . {
         Get-ChildItem ".\dist" -Recurse
     } | Out-Null;
 
-    & "C:\Program Files\Google\Chrome\Application\chrome.exe" "$($PSScriptRoot)\dist\app\index.html";
+    & .\start-server.ps1;
 
+    & "C:\Program Files\Google\Chrome\Application\chrome.exe" "http://localhost:8080";
 }
