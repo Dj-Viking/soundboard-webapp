@@ -10,7 +10,6 @@ class Button {
     private readonly COLORS: string[] = ["red", "grey", "green", "blue", "white"];
     public audioEl: HTMLAudioElement;
     public fileInputEl: HTMLInputElement;
-    public inputFiles: FileList = {} as any;
 
     public constructor(props: Partial<ButtonProps>) {
         const { src, color, id } = props;
@@ -23,8 +22,12 @@ class Button {
         this.fileInputEl.accept = ".mp3,.wav";
         this.fileInputEl.id = this.getRandomId() + "_file";
 
-        this.fileInputEl.addEventListener("change", (e) => {
-            console.log("change event on the input!!", e);
+        // TODO: append tooltip to show name of the file on the button?
+        this.fileInputEl.addEventListener("change", () => {
+            if (this.fileInputEl.files?.length === 1) {
+                this.el.textContent = "TODO";
+                console.log("change event on the input!!", "\nfiles", this.fileInputEl.files);
+            }
         });
 
         src && (this.audioEl.src = src);
@@ -45,6 +48,15 @@ class Button {
         };
 
         this.el.append(this.audioEl, this.fileInputEl);
+    }
+
+    // TODO: FINISH ME
+    public uploadFile(): Promise<boolean> {
+        return new Promise<boolean>((res) => {
+            // this.fileInputEl.click();
+
+            res(true);
+        });
     }
 
     private set props(obj: ButtonProps) {
@@ -212,6 +224,11 @@ class Main {
         switch (true) {
             case keyControl.f:
                 {
+                    btn.uploadFile().then((result) => {
+                        if (result) {
+                            // update that button in storage with this file
+                        }
+                    });
                     btn.fileInputEl.click();
                 }
                 break;
