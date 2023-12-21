@@ -3,6 +3,7 @@ import fs from "node:fs";
 const PORT = process.env.PORT || 8080;
 console.log(`running server on http://localhost:${PORT}`);
 
+// TODO somehow condense this to serve all the files if they match a pattern or something
 const handleGetRequest: http.RequestListener = (req, res) => {
     switch (req.url) {
         case "/styles.js":
@@ -51,6 +52,11 @@ const handleGetRequest: http.RequestListener = (req, res) => {
 };
 
 const router: http.RequestListener = (req, res) => {
+    fs.watch("./dist/app", { encoding: "buffer" }, (event, filename) => {
+        console.log("watch event", event);
+        console.log("buffer string", filename?.toString());
+    });
+
     // Website you wish to allow to connect
     res.setHeader("Access-Control-Allow-Origin", "*");
 
