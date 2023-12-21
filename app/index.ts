@@ -9,14 +9,28 @@ class Button {
     public color: string = "";
     private readonly COLORS: string[] = ["red", "grey", "green", "blue", "white"];
     public audioEl: HTMLAudioElement;
+    public fileInputEl: HTMLInputElement;
+    public inputFiles: FileList = {} as any;
 
     public constructor(props: Partial<ButtonProps>) {
         const { src, color, id } = props;
         this.audioEl = document.createElement("audio");
+        this.audioEl.id = this.getRandomId();
+
+        this.fileInputEl = document.createElement("input");
+        this.fileInputEl.type = "file";
+        this.fileInputEl.style.display = "none";
+        this.fileInputEl.accept = ".mp3,.wav";
+        this.fileInputEl.id = this.getRandomId() + "_file";
+
+        this.fileInputEl.addEventListener("change", (e) => {
+            console.log("change event on the input!!", e);
+        });
+
         src && (this.audioEl.src = src);
 
         this.el = document.createElement("button");
-        id ? (this.el.id = id) : (this.el.id = (Math.random() * 10000).toString());
+        id ? (this.el.id = id) : (this.el.id = this.getRandomId());
 
         this.el.classList.add("soundboard-button");
 
@@ -27,10 +41,10 @@ class Button {
         this.props = {
             src: src || "",
             color: this.color,
-            id: id || (Math.random() * 10000).toString(),
+            id: id || this.getRandomId(),
         };
 
-        this.el.appendChild(this.audioEl);
+        this.el.append(this.audioEl, this.fileInputEl);
     }
 
     private set props(obj: ButtonProps) {
@@ -46,6 +60,10 @@ class Button {
             color: this.color,
             id: this.el.id,
         };
+    }
+
+    private getRandomId(): string {
+        return (Math.random() * 10000).toString().replace(".", "_");
     }
 
     private getRandomColor(): string {
@@ -107,7 +125,7 @@ class Main {
                 {
                     this.keyControl = {
                         ...this.keyControl,
-                        Alt: true,
+                        f: true,
                     };
                     this.fKeyMessageSpan.style.visibility = "visible";
                 }
@@ -182,7 +200,7 @@ class Main {
         storageButtons.push(btn.props);
 
         btn.el.addEventListener("click", (_e) => {
-            this.boardButtonClickHandler(this.keyControl, btn.el);
+            this.boardButtonClickHandler(this.keyControl, btn);
         });
 
         this.soundboardContainer.appendChild(btn.el);
@@ -190,14 +208,19 @@ class Main {
         this.setStorageButtons(storageButtons);
     };
 
-    private boardButtonClickHandler = (keyControl: KeyControl, btn: Button["el"]) => {
+    private boardButtonClickHandler = (keyControl: KeyControl, btn: Button) => {
         switch (true) {
+            case keyControl.f:
+                {
+                    btn.fileInputEl.click();
+                }
+                break;
             case keyControl.Control:
                 {
-                    const filtered = this.getStorageButtons().filter((sb) => sb.id !== btn.id);
+                    const filtered = this.getStorageButtons().filter((sb) => sb.id !== btn.el.id);
                     this.setStorageButtons(filtered);
 
-                    this.soundboardContainer.removeChild(document.getElementById(btn.id)!);
+                    this.soundboardContainer.removeChild(document.getElementById(btn.el.id)!);
                 }
                 break;
             default:
@@ -217,7 +240,7 @@ class Main {
 
         btns.forEach((btn) => {
             btn.el.addEventListener("click", (_e) => {
-                this.boardButtonClickHandler(this.keyControl, btn.el);
+                this.boardButtonClickHandler(this.keyControl, btn);
             });
             this.soundboardContainer.appendChild(btn.el);
         });
