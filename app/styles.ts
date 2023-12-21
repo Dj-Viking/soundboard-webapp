@@ -20,8 +20,14 @@ export class Styles {
                 border-radius: 10px;
             }
 
+            .header {
+                color: blue;
+                text-align: center;
+            }
+
             .btn-control-container {
                 display: flex;
+                flex-direction: column;
                 align-items: center;
             }
 

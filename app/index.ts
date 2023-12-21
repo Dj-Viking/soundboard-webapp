@@ -59,10 +59,12 @@ class Main {
     public soundboardContainer: HTMLDivElement;
     public btnControlContainer: HTMLDivElement;
     public ctrlKeyMessageSpan: HTMLSpanElement;
+    public fKeyMessageSpan: HTMLSpanElement;
     public addButtonEl: HTMLButtonElement;
     public header: HTMLHeadingElement;
     public keyControl: KeyControl = {
         Alt: false,
+        f: false,
         Control: false,
         Shift: false,
     };
@@ -72,6 +74,7 @@ class Main {
         this.header = document.createElement("h1");
         this.btnControlContainer = document.createElement("div");
         this.ctrlKeyMessageSpan = document.createElement("span");
+        this.fKeyMessageSpan = document.createElement("span");
         this.addButtonEl = document.createElement("button");
         this.soundboardContainer = document.createElement("div");
         this.init();
@@ -82,10 +85,12 @@ class Main {
     public handleKeyUp = () => {
         this.keyControl = {
             Alt: false,
+            f: false,
             Control: false,
             Shift: false,
         };
         this.ctrlKeyMessageSpan.style.visibility = "hidden";
+        this.fKeyMessageSpan.style.visibility = "hidden";
     };
 
     public handleKeyDown = (event: MyKeyboardEvent) => {
@@ -98,12 +103,13 @@ class Main {
                     };
                 }
                 break;
-            case "Alt":
+            case "f":
                 {
                     this.keyControl = {
                         ...this.keyControl,
                         Alt: true,
                     };
+                    this.fKeyMessageSpan.style.visibility = "visible";
                 }
                 break;
             case "Control":
@@ -135,7 +141,7 @@ class Main {
         document.head.appendChild(new Styles().tag);
 
         this.header.innerText = "have fun with the soundboard!";
-        this.header.style.color = "blue";
+        this.header.classList.add("header");
 
         this.body.appendChild(this.header);
 
@@ -144,8 +150,19 @@ class Main {
         this.ctrlKeyMessageSpan.innerText = "Control is pressed! - click a button to delete it";
         this.ctrlKeyMessageSpan.style.color = "red";
         this.ctrlKeyMessageSpan.style.visibility = "hidden";
+        this.ctrlKeyMessageSpan.style.fontWeight = "bold";
 
-        this.btnControlContainer.append(this.addButtonEl, this.ctrlKeyMessageSpan);
+        this.fKeyMessageSpan.innerText =
+            "F is pressed! - click a button to upload an audio file onto it";
+        this.fKeyMessageSpan.style.color = "blue";
+        this.fKeyMessageSpan.style.visibility = "hidden";
+        this.fKeyMessageSpan.style.fontWeight = "bold";
+
+        this.btnControlContainer.append(
+            this.addButtonEl,
+            this.ctrlKeyMessageSpan,
+            this.fKeyMessageSpan
+        );
 
         this.body.append(this.btnControlContainer, this.soundboardContainer);
     }
