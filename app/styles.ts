@@ -20,6 +20,11 @@ export class Styles {
                 border-radius: 10px;
             }
 
+            .btn-control-container {
+                display: flex;
+                align-items: center;
+            }
+
             .add-button {
                 color: white;
                 height: ${this.ADD_BUTTON_DIM}px;
