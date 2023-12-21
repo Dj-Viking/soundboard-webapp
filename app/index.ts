@@ -121,13 +121,14 @@ class Main {
                 }
                 break;
         }
-        console.log(this.keyControl);
     };
     public init(): void {
         if (!localStorage.getItem("buttons")) {
             localStorage.setItem("buttons", JSON.stringify([]));
         }
-
+        document.addEventListener("drag", (e) => {
+            console.log("drag event", e);
+        });
         document.addEventListener("keydown", this.handleKeyDown as any);
         document.addEventListener("keyup", this.handleKeyUp);
 
@@ -146,8 +147,7 @@ class Main {
 
         this.btnControlContainer.append(this.addButtonEl, this.ctrlKeyMessageSpan);
 
-        this.body.appendChild(this.btnControlContainer);
-        this.body.appendChild(this.soundboardContainer);
+        this.body.append(this.btnControlContainer, this.soundboardContainer);
     }
 
     private getStorageButtons(): Array<Button["props"]> {
@@ -177,6 +177,9 @@ class Main {
         switch (true) {
             case keyControl.Control:
                 {
+                    const filtered = this.getStorageButtons().filter((sb) => sb.id !== btn.id);
+                    this.setStorageButtons(filtered);
+
                     this.soundboardContainer.removeChild(document.getElementById(btn.id)!);
                 }
                 break;
