@@ -52,10 +52,10 @@ const handleGetRequest: http.RequestListener = (req, res) => {
 };
 
 const router: http.RequestListener = (req, res) => {
-    fs.watch("./dist/app", { encoding: "buffer" }, (event, filename) => {
-        console.log("watch event", event);
-        console.log("buffer string", filename?.toString());
-    });
+    // fs.watch("./dist/app", { encoding: "buffer" }, (event, filename) => {
+    //     console.log("watch event", event);
+    //     console.log("buffer string", filename?.toString());
+    // });
 
     // Website you wish to allow to connect
     res.setHeader("Access-Control-Allow-Origin", "*");

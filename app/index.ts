@@ -10,6 +10,8 @@ class Button {
     private readonly COLORS: string[] = ["red", "grey", "green", "blue", "white"];
     public audioEl: HTMLAudioElement;
     public fileInputEl: HTMLInputElement;
+    public hasAudioFile: boolean = false;
+    public isPlaying: boolean = false;
 
     public constructor(props: Partial<ButtonProps>) {
         const { src, color, id } = props;
@@ -25,8 +27,14 @@ class Button {
         // TODO: append tooltip to show name of the file on the button?
         this.fileInputEl.addEventListener("change", () => {
             if (this.fileInputEl.files?.length === 1) {
-                this.el.textContent = "TODO";
-                console.log("change event on the input!!", "\nfiles", this.fileInputEl.files);
+                const nameTextSpan = document.createElement("span");
+
+                nameTextSpan.textContent = this.fileInputEl.files.item(0)!.name;
+                this.el.style.width = "auto";
+                this.el.prepend(nameTextSpan);
+
+                this.audioEl.src = URL.createObjectURL(this.fileInputEl.files.item(0)!);
+                this.hasAudioFile = true;
             }
         });
 
@@ -48,15 +56,6 @@ class Button {
         };
 
         this.el.append(this.audioEl, this.fileInputEl);
-    }
-
-    // TODO: FINISH ME
-    public uploadFile(): Promise<boolean> {
-        return new Promise<boolean>((res) => {
-            // this.fileInputEl.click();
-
-            res(true);
-        });
     }
 
     private set props(obj: ButtonProps) {
@@ -224,11 +223,6 @@ class Main {
         switch (true) {
             case keyControl.f:
                 {
-                    btn.uploadFile().then((result) => {
-                        if (result) {
-                            // update that button in storage with this file
-                        }
-                    });
                     btn.fileInputEl.click();
                 }
                 break;
@@ -240,7 +234,27 @@ class Main {
                     this.soundboardContainer.removeChild(document.getElementById(btn.el.id)!);
                 }
                 break;
+            case btn.hasAudioFile &&
+                Object.values(this.keyControl).every((pressedKey) => pressedKey === false):
+                {
+                    if (btn.hasAudioFile) {
+                        (async () => {
+                            if (!btn.isPlaying) {
+                                btn.isPlaying = true;
+                                await btn.audioEl.play();
+                            } else {
+                                btn.isPlaying = false;
+                                btn.audioEl.pause();
+                                // restart the track
+                                btn.audioEl.currentTime = 0;
+                            }
+                        })();
+                    }
+                }
+                break;
             default:
+                {
+                }
                 break;
         }
     };
