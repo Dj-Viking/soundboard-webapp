@@ -1,88 +1,8 @@
 import { Styles } from "./styles.js";
-type ButtonProps = {
-    src: string;
-    id: string;
-    color: string;
-};
-class Button {
-    public el: HTMLButtonElement;
-    public color: string = "";
-    private readonly COLORS: string[] = ["red", "grey", "green", "blue", "white"];
-    public audioEl: HTMLAudioElement;
-    public fileInputEl: HTMLInputElement;
-    public hasAudioFile: boolean = false;
-    public isPlaying: boolean = false;
-
-    public constructor(props: Partial<ButtonProps>) {
-        const { src, color, id } = props;
-        this.audioEl = document.createElement("audio");
-        this.audioEl.id = this.getRandomId();
-
-        this.fileInputEl = document.createElement("input");
-        this.fileInputEl.type = "file";
-        this.fileInputEl.style.display = "none";
-        this.fileInputEl.accept = ".mp3,.wav";
-        this.fileInputEl.id = this.getRandomId() + "_file";
-
-        // TODO: append tooltip to show name of the file on the button?
-        this.fileInputEl.addEventListener("change", () => {
-            if (this.fileInputEl.files?.length === 1) {
-                const nameTextSpan = document.createElement("span");
-
-                nameTextSpan.textContent = this.fileInputEl.files.item(0)!.name;
-                this.el.style.width = "auto";
-                this.el.prepend(nameTextSpan);
-
-                this.audioEl.src = URL.createObjectURL(this.fileInputEl.files.item(0)!);
-                this.hasAudioFile = true;
-            }
-        });
-
-        src && (this.audioEl.src = src);
-
-        this.el = document.createElement("button");
-        id ? (this.el.id = id) : (this.el.id = this.getRandomId());
-
-        this.el.classList.add("soundboard-button");
-
-        // pick random color if didn't decide on what i guess
-        this.color = color || this.getRandomColor();
-
-        this.el.style.backgroundColor = color || this.color;
-        this.props = {
-            src: src || "",
-            color: this.color,
-            id: id || this.getRandomId(),
-        };
-
-        this.el.append(this.audioEl, this.fileInputEl);
-    }
-
-    private set props(obj: ButtonProps) {
-        const { src, color, id } = obj;
-        src && (this.audioEl.src = src);
-        this.color = color;
-        this.el.id = id;
-    }
-
-    public get props(): ButtonProps {
-        return {
-            src: this.audioEl.src,
-            color: this.color,
-            id: this.el.id,
-        };
-    }
-
-    private getRandomId(): string {
-        return (Math.random() * 10000).toString().replace(".", "_");
-    }
-
-    private getRandomColor(): string {
-        return this.COLORS[Math.floor(Math.random() * this.COLORS.length)];
-    }
-}
-
-type KeyControl = Record<KeyboardKey, boolean>;
+import { Button } from "./Button.js";
+import { btnIDB } from "./IDB.js";
+import { Storage } from "./Storage.js";
+export type KeyControl = Record<KeyboardKey, boolean>;
 class Main {
     public body: HTMLElement;
     public soundboardContainer: HTMLDivElement;
@@ -196,17 +116,11 @@ class Main {
         this.body.append(this.btnControlContainer, this.soundboardContainer);
     }
 
-    private getStorageButtons(): Array<Button["props"]> {
-        return JSON.parse(localStorage.getItem("buttons") as string) as Array<Button["props"]>;
-    }
-
-    private setStorageButtons(btns: Array<Button["props"]>): void {
-        localStorage.setItem("buttons", JSON.stringify(btns));
-    }
-
     private addNewButtonToBoard = (_event: MouseEvent) => {
-        const storageButtons = this.getStorageButtons();
+        const storageButtons = Storage.getStorageButtons();
         const btn = new Button({});
+
+        btnIDB.handleRequest("put", btn);
 
         storageButtons.push(btn.props);
 
@@ -216,7 +130,7 @@ class Main {
 
         this.soundboardContainer.appendChild(btn.el);
 
-        this.setStorageButtons(storageButtons);
+        Storage.setStorageButtons(storageButtons);
     };
 
     private boardButtonClickHandler = (keyControl: KeyControl, btn: Button) => {
@@ -224,12 +138,15 @@ class Main {
             case keyControl.f:
                 {
                     btn.fileInputEl.click();
+                    this.keyControl = { ...this.keyControl, f: false };
                 }
                 break;
             case keyControl.Control:
                 {
-                    const filtered = this.getStorageButtons().filter((sb) => sb.id !== btn.el.id);
-                    this.setStorageButtons(filtered);
+                    const filtered = Storage.getStorageButtons().filter(
+                        (sb) => sb.id !== btn.el.id
+                    );
+                    Storage.setStorageButtons(filtered);
 
                     this.soundboardContainer.removeChild(document.getElementById(btn.el.id)!);
                 }
@@ -265,7 +182,7 @@ class Main {
         this.addButtonEl.addEventListener("click", this.addNewButtonToBoard);
         this.soundboardContainer.classList.add("soundboard-container");
 
-        const strgeBtns = this.getStorageButtons();
+        const strgeBtns = Storage.getStorageButtons();
 
         const btns = strgeBtns.map((props) => new Button(props));
 
