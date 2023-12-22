@@ -117,38 +117,45 @@ class Main {
     }
 
     private addNewButtonToBoard = (_event: MouseEvent) => {
-        const storageButtons = Storage.getStorageButtons();
-        const btn = new Button({});
+        Storage.getStorageButtons().then((storageButtons) => {
+            const btn = new Button({});
 
-        btnIDB.handleRequest("put", btn.props);
+            btnIDB.handleRequest("put", btn.props);
 
-        storageButtons.push(btn.props);
+            storageButtons.push(btn.props);
 
-        btn.el.addEventListener("click", (_e) => {
-            this.boardButtonClickHandler(this.keyControl, btn);
+            btn.el.addEventListener("click", (_e) => {
+                this.boardButtonClickHandler(this.keyControl, btn);
+            });
+
+            this.soundboardContainer.appendChild(btn.el);
+
+            Storage.setStorageButtons(storageButtons);
         });
-
-        this.soundboardContainer.appendChild(btn.el);
-
-        Storage.setStorageButtons(storageButtons);
     };
 
     private boardButtonClickHandler = (keyControl: KeyControl, btn: Button) => {
         switch (true) {
             case keyControl.f:
                 {
-                    btn.fileInputEl.click();
-                    this.keyControl = { ...this.keyControl, f: false };
+                    if (!btn.hasAudioFile) {
+                        btn.fileInputEl.click();
+                    } else {
+                        (async () => {
+                            await btn.audioEl.play();
+                        })();
+                    }
                 }
                 break;
             case keyControl.Control:
                 {
-                    const filtered = Storage.getStorageButtons().filter(
-                        (sb) => sb.id !== btn.el.id
-                    );
-                    Storage.setStorageButtons(filtered);
-
-                    this.soundboardContainer.removeChild(document.getElementById(btn.el.id)!);
+                    Storage.getStorageButtons().then((btns) => {
+                        const filtered = btns.filter((sb) => sb.id !== btn.el.id);
+                        const toDelete = btns.find((sb) => sb.id === btn.el.id);
+                        Storage.setStorageButtons(filtered);
+                        btnIDB.handleRequest("delete", toDelete);
+                        this.soundboardContainer.removeChild(document.getElementById(btn.el.id)!);
+                    });
                 }
                 break;
             case btn.hasAudioFile &&
@@ -182,15 +189,15 @@ class Main {
         this.addButtonEl.addEventListener("click", this.addNewButtonToBoard);
         this.soundboardContainer.classList.add("soundboard-container");
 
-        const strgeBtns = Storage.getStorageButtons();
+        Storage.getStorageButtons().then((strgeBtns) => {
+            const btns = strgeBtns.map((props) => new Button(props));
 
-        const btns = strgeBtns.map((props) => new Button(props));
-
-        btns.forEach((btn) => {
-            btn.el.addEventListener("click", (_e) => {
-                this.boardButtonClickHandler(this.keyControl, btn);
+            btns.forEach((btn) => {
+                btn.el.addEventListener("click", (_e) => {
+                    this.boardButtonClickHandler(this.keyControl, btn);
+                });
+                this.soundboardContainer.appendChild(btn.el);
             });
-            this.soundboardContainer.appendChild(btn.el);
         });
     }
 

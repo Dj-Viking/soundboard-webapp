@@ -77,7 +77,6 @@ class IDBHelper<T> {
                 const filtered = req.result
                     .filter((props) => props.id === item.id)
                     .map((props) => new Button(props));
-                console.log("filtered", filtered);
 
                 const btnToUpdate = filtered.find((btn) => btn.el.id === item.id)!;
 
@@ -92,13 +91,12 @@ class IDBHelper<T> {
     public async handleRequest(
         method: IDBRequestMethod,
         item?: RequestItemType<T>
-    ): Promise<void | T[]> {
-        return new Promise<void | T[]>((resolve) => {
+    ): Promise<void | RequestItemType<T>[]> {
+        return new Promise<void | RequestItemType<T>[]>((resolve) => {
             this.openConnection().then((request) => {
                 request.onsuccess = () => {
                     this.openStore(request).then(([db, store, transaction]) => {
                         let itemsReq: IDBRequest<any[]>;
-
                         switch (method) {
                             case "update":
                                 {
@@ -132,8 +130,8 @@ class IDBHelper<T> {
                                 {
                                     itemsReq = store.getAll() as IDBRequest<T[]>;
                                     itemsReq.onsuccess = () => {
-                                        const gifs = itemsReq.result as T[];
-                                        resolve(gifs);
+                                        const items = itemsReq.result as RequestItemType<T>[];
+                                        resolve(items);
                                     };
                                 }
                                 break;
@@ -141,12 +139,12 @@ class IDBHelper<T> {
                                 {
                                     if (!item) {
                                         throw new Error(
-                                            "cannot delete a gif without passing a gif object to the class \n usage: class.handleRequest('delete', gif);"
+                                            "cannot delete an item without passing an item to the class \n usage: class.handleRequest('delete', item);"
                                         );
                                     }
                                     if (!(item as any).id) {
                                         throw new Error(
-                                            "to use this class your items must have an id property"
+                                            "to use this method your item passed in must have an id property"
                                         );
                                     }
                                     store.delete((item as T as any)!.id);

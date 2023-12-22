@@ -86,7 +86,10 @@ export class Button {
 
         if (file) {
             this.filenameSpan.textContent = file.name;
+            this.el.prepend(this.filenameSpan);
+            this.el.style.width = "auto";
             this.file = file;
+            this.hasAudioFile = true;
             this.audioEl.src = URL.createObjectURL(file);
         }
     }
