@@ -120,7 +120,7 @@ class Main {
         const storageButtons = Storage.getStorageButtons();
         const btn = new Button({});
 
-        btnIDB.handleRequest("put", btn);
+        btnIDB.handleRequest("put", btn.props);
 
         storageButtons.push(btn.props);
 

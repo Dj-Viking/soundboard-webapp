@@ -1,4 +1,5 @@
 import { Button } from "./Button.js";
+import { btnIDB } from "./IDB.js";
 export class Storage {
     public static getStorageButtons(): Array<Button["props"]> {
         return JSON.parse(localStorage.getItem("buttons") as string) as Array<Button["props"]>;

@@ -52,6 +52,8 @@ export class Button {
                     file,
                 };
 
+                btnIDB.handleRequest("update", this.props);
+
                 Storage.updateButton(this);
             }
         });

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { Button } from "./Button";
+import { Button } from "./Button.js";
 export type IDBRequestMethod = "put" | "getAll" | "delete" | "deleteAll" | "update";
-export type RequestItemType<T> = T extends Button ? Button : any;
+export type RequestItemType<T> = T extends Button ? Button["props"] : any;
 // make this the abstract class to make new idb helpers based on their type
 class IDBHelper<T> {
     /**
@@ -64,13 +64,27 @@ class IDBHelper<T> {
         });
     }
 
-    private handleUpdate<I extends RequestItemType<T>>(req: IDBRequest<T[]>, item?: I) {
-        if (!item || !item.el.id) {
+    private handleUpdateButton<I extends Button["props"]>(
+        store: IDBObjectStore,
+        req: IDBRequest<I[]>,
+        item?: I
+    ) {
+        if (!item || !item.id) {
             throw new Error("update requires the item to be passed to the request handler");
         }
         req.onsuccess = () => {
             if (req.result.length > 0) {
-                const filtered = req.result.filter((item_) => (item_ as any).id === item.el.id);
+                const filtered = req.result
+                    .filter((props) => props.id === item.id)
+                    .map((props) => new Button(props));
+                console.log("filtered", filtered);
+
+                const btnToUpdate = filtered.find((btn) => btn.el.id === item.id)!;
+
+                btnToUpdate.props = { ...btnToUpdate.props, file: item.file };
+
+                store.delete(item.id);
+                store.put(btnToUpdate.props);
             }
         };
     }
@@ -83,13 +97,17 @@ class IDBHelper<T> {
             this.openConnection().then((request) => {
                 request.onsuccess = () => {
                     this.openStore(request).then(([db, store, transaction]) => {
-                        let itemsReq: IDBRequest<T[]>;
+                        let itemsReq: IDBRequest<any[]>;
 
                         switch (method) {
                             case "update":
                                 {
                                     itemsReq = store.getAll();
-                                    this.handleUpdate<RequestItemType<T>>(itemsReq, item);
+                                    this.handleUpdateButton<RequestItemType<T>>(
+                                        store,
+                                        itemsReq,
+                                        item
+                                    );
                                     resolve();
                                 }
                                 break;
