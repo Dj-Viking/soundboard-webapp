@@ -114,7 +114,9 @@ class Main {
         this.header.classList.add("header");
 
         this.body.appendChild(this.header);
-        this.body.append(this.volumeControlInput, this.volumeInputText);
+        const volumeLabel = document.createElement("p");
+        volumeLabel.textContent = "Volume";
+        this.body.append(volumeLabel, this.volumeControlInput, this.volumeInputText);
 
         this.btnControlContainer.classList.add("btn-control-container");
 
@@ -147,9 +149,9 @@ class Main {
 
             storageButtons.push(btn.props);
 
-            btn.el.addEventListener("click", (_e) => {
+            btn.el.onclick = () => {
                 this.boardButtonClickHandler(this.keyControl, btn);
-            });
+            };
             this.allButtons.push(btn);
 
             this.stopButtonEl.onclick = () => {
@@ -173,7 +175,7 @@ class Main {
                 {
                     (async () => {
                         if (!btn.hasAudioFile) {
-                            btn.fileInputEl.click();
+                            btn.clickInput(keyControl);
                         } else {
                             await btn.audioEl.play();
                         }
@@ -208,9 +210,11 @@ class Main {
                                 btn.isPlaying = true;
                                 this.isPlaying = true;
                                 btn.audioEl.volume = Number(this.volumeControlInput.value);
-                                this.volumeControlInput.oninput = (e) => {
-                                    this.handleVolumeChange(e, btn.audioEl);
-                                };
+                                setTimeout(async () => {
+                                    this.volumeControlInput.oninput = (e) => {
+                                        this.handleVolumeChange(e, btn.audioEl);
+                                    };
+                                }, 1);
                                 await btn.audioEl.play();
                             } else {
                                 btn.audioEl.pause();

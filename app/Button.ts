@@ -1,5 +1,6 @@
 import { Storage } from "./Storage.js";
 import { btnIDB } from "./IDB.js";
+import { KeyControl } from "./index.js";
 export type ButtonProps = {
     id: string;
     color: string;
@@ -77,6 +78,11 @@ export class Button {
 
         this.el.append(this.audioEl, this.fileInputEl);
     }
+
+    public clickInput = (keyCtrl: KeyControl) => {
+        this.fileInputEl.click();
+        keyCtrl.f = false;
+    };
 
     public set props(obj: ButtonProps) {
         const { color, id, file } = obj;
