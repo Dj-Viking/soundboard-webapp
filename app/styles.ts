@@ -25,6 +25,10 @@ export class Styles {
                 text-align: center;
             }
 
+            .track-progress {
+                width: 70%;
+            }
+
             .btn-control-container {
                 display: flex;
                 flex-direction: column;

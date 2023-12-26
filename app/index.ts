@@ -11,12 +11,16 @@ class Main {
         Shift: false,
     };
     private isPlaying: boolean = false;
-    private allButtons: Button[] = [];
+    private currentlyPlayingButton: Button | null = null;
+    private allButtons: Record<Button["el"]["id"], Button> = {};
+    private RAFId: number = 0;
 
     public constructor(
         private readonly body: HTMLElement = document.body,
         private readonly soundboardContainer: HTMLDivElement = document.createElement("div"),
         private readonly btnControlContainer: HTMLDivElement = document.createElement("div"),
+        private readonly trackProgressBar: HTMLProgressElement = document.createElement("progress"),
+        private readonly trackTimeTextSpan: HTMLSpanElement = document.createElement("span"),
         private readonly ctrlKeyMessageSpan: HTMLSpanElement = document.createElement("span"),
         private readonly volumeControlInput: HTMLInputElement = document.createElement("input"),
         private readonly volumeInputText: HTMLSpanElement = document.createElement("span"),
@@ -27,6 +31,35 @@ class Main {
     ) {
         this.init();
         this.soundboardSetup();
+        this.RAFId = window.requestAnimationFrame(this.animate);
+    }
+
+    private animate = (_rafTimestamp?: number): void => {
+        if (this.isPlaying) {
+            //update transport while playing
+            this.refreshTrackProgress(this.currentlyPlayingButton!.audioEl);
+        }
+
+        this.RAFId = window.requestAnimationFrame(this.animate);
+    };
+
+    /**
+     * make this called on every frame
+     */
+    private refreshTrackProgress(audioEl: Button["audioEl"]): void {
+        this.trackTimeTextSpan.textContent = `${this.convertTime(audioEl.currentTime)} -- ${this.convertTime(
+            audioEl.duration
+        )}`;
+
+        this.trackProgressBar.max = audioEl.duration;
+        this.trackProgressBar.value = audioEl.currentTime;
+    }
+
+    private convertTime(secs: number = 0): string {
+        const date = new Date(0);
+        date.setSeconds(secs);
+        const timeString = date.toISOString().substring(11, 19);
+        return timeString;
     }
 
     // reset keydown updates
@@ -125,15 +158,20 @@ class Main {
         this.ctrlKeyMessageSpan.style.visibility = "hidden";
         this.ctrlKeyMessageSpan.style.fontWeight = "bold";
 
-        this.fKeyMessageSpan.innerText =
-            "F is pressed! - click a button to upload an audio file onto it";
+        this.fKeyMessageSpan.innerText = "F is pressed! - click a button to upload an audio file onto it";
         this.fKeyMessageSpan.style.color = "blue";
         this.fKeyMessageSpan.style.visibility = "hidden";
         this.fKeyMessageSpan.style.fontWeight = "bold";
 
+        this.trackProgressBar.classList.add("track-progress");
+
+        this.trackTimeTextSpan.textContent = "00:00:00 -- 00:00:00";
+
         this.btnControlContainer.append(
             this.addButtonEl,
             this.stopButtonEl,
+            this.trackProgressBar,
+            this.trackTimeTextSpan,
             this.ctrlKeyMessageSpan,
             this.fKeyMessageSpan
         );
@@ -152,14 +190,15 @@ class Main {
             btn.el.onclick = () => {
                 this.boardButtonClickHandler(this.keyControl, btn);
             };
-            this.allButtons.push(btn);
+            this.allButtons[btn.el.id] = btn;
 
             this.stopButtonEl.onclick = () => {
-                this.allButtons.forEach((b) => {
+                Object.values(this.allButtons).forEach((b) => {
                     b.audioEl.currentTime = 0;
                     b.audioEl.pause();
                     b.isPlaying = false;
                     this.isPlaying = false;
+                    this.currentlyPlayingButton = null;
                 });
             };
 
@@ -198,7 +237,7 @@ class Main {
                     if (btn.hasAudioFile) {
                         (async () => {
                             if (this.isPlaying) {
-                                this.allButtons.forEach((_btn) => {
+                                Object.values(this.allButtons).forEach((_btn) => {
                                     if (_btn.audioEl.id !== btn.audioEl.id) {
                                         _btn.audioEl.pause();
                                         _btn.isPlaying = false;
@@ -209,6 +248,7 @@ class Main {
                             if (!btn.isPlaying) {
                                 btn.isPlaying = true;
                                 this.isPlaying = true;
+                                this.currentlyPlayingButton = btn;
                                 btn.audioEl.volume = Number(this.volumeControlInput.value);
                                 setTimeout(async () => {
                                     this.volumeControlInput.oninput = (e) => {
@@ -251,7 +291,7 @@ class Main {
                 btn.el.addEventListener("click", (_e) => {
                     this.boardButtonClickHandler(this.keyControl, btn);
                 });
-                this.allButtons.push(btn);
+                this.allButtons[btn.el.id] = btn;
                 this.soundboardContainer.appendChild(btn.el);
             });
 
@@ -261,6 +301,7 @@ class Main {
                     b.audioEl.pause();
                     b.isPlaying = false;
                     this.isPlaying = false;
+                    this.currentlyPlayingButton = null;
                 });
             };
         });
