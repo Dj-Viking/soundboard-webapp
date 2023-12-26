@@ -4,4 +4,7 @@ declare global {
     interface MyKeyboardEvent extends KeyboardEvent {
         key: KeyboardKey;
     }
+    interface EventTarget {
+        value: any;
+    }
 }
