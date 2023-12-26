@@ -573,31 +573,40 @@ export const getControllerTableFromName = <N extends keyof typeof SUPPORTED_CONT
 
 export class MIDIController {
     public access = {} as MIDIAccessRecord;
-    public inputs = [] as Array<MIDIInput>;
-    public inputs_size = 0;
-    public outputs_size = 0;
-    public outputs = [] as Array<MIDIOutput>;
-    public online = false;
-    public recentlyUsed: MIDIInputName = "TouchOSC Bridge";
-    public controllerPreference: IMIDIController["controllerPreference"] = {
-        hasPreference: true,
-        midiMappingPreference: {} as any,
-    };
 
-    public constructor(access: MIDIAccessRecord) {
-        this.access = access;
-        this.online = true;
-        this.inputs_size = access!.inputs.size;
-        this.outputs_size = access!.outputs.size;
-        this.controllerPreference = {
+    public constructor(
+        public recentlyUsed: MIDIInputName = "TouchOSC Bridge",
+        public controllerPreference: IMIDIController["controllerPreference"] = {
             hasPreference: true,
-            midiMappingPreference: new MIDIMappingPreference("TouchOSC Bridge"),
-        };
-        this._setInputs(access!.inputs);
-        this._setOutputs(access!.outputs);
+            midiMappingPreference: {} as any,
+        },
+        public inputs = [] as Array<MIDIInput>,
+        public outputs = [] as Array<MIDIOutput>,
+        public inputs_size = 0,
+        public outputs_size = 0,
+        public online = false,
+        access: MIDIAccessRecord = null as any
+    ) {
+        if (access) {
+            this.access = access;
+            this.online = true;
+            this.inputs_size = access.inputs.size;
+            this.outputs_size = access.outputs.size;
+            this.controllerPreference = {
+                hasPreference: true,
+                midiMappingPreference: new MIDIMappingPreference("TouchOSC Bridge"),
+            };
+            this._setInputs(access.inputs);
+        }
     }
-    public static async requestMIDIAccess(): Promise<MIDIAccessRecord> {
-        return window.navigator.requestMIDIAccess();
+    public static async requestMIDIAccess(): Promise<MIDIAccessRecord | null> {
+        try {
+            return window.navigator.requestMIDIAccess();
+        } catch (error) {
+            console.error("please check if accessing MIDI devices is supported in your browser!");
+            console.error(error);
+            return null;
+        }
     }
 
     public setInputCbs(
@@ -605,8 +614,8 @@ export class MIDIController {
         _onstatechangecb?: (event: MIDIConnectionEvent) => unknown
     ): this {
         for (let j = 0; j < this.inputs!.length; j++) {
-            this.inputs![j].onstatechange = _onstatechangecb;
-            this.inputs![j].onmidimessage = _onmidicb;
+            this.inputs[j].onstatechange = _onstatechangecb;
+            this.inputs[j].onmidimessage = _onmidicb;
         }
         return this;
     }
@@ -621,5 +630,4 @@ export class MIDIController {
             }
         }
     }
-    private _setOutputs(inputs: MIDIAccessRecord["outputs"]) {}
 }
