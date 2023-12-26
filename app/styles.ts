@@ -36,7 +36,6 @@ export class Styles {
 
             .midi-selector {
                 width: 100%;
-                margin: 0 auto;
             }
 
             .btn-control-container {

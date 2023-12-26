@@ -4,6 +4,7 @@ import { btnIDB } from "./IDB.js";
 import { Storage } from "./Storage.js";
 import { MIDIController } from "./MIDIController.js";
 import { MIDISelector } from "./MIDISelector.js";
+import { MIDIDeviceDisplay } from "./MIDIDeviceDisplay.js";
 export function getRandomId(): string {
     return (Math.random() * 10000).toString().replace(".", "_");
 }
@@ -23,6 +24,8 @@ class Main {
     public constructor(
         private readonly body: HTMLElement = document.body,
         private readonly midiSelector = new MIDISelector(),
+        private readonly midiDeviceDisplay = new MIDIDeviceDisplay(),
+        private readonly toggleUsingMIDIButton: HTMLButtonElement = document.createElement("button"),
         private readonly soundboardContainer: HTMLDivElement = document.createElement("div"),
         private readonly btnControlContainer: HTMLDivElement = document.createElement("div"),
         private readonly trackProgressBar: HTMLProgressElement = document.createElement("progress"),
@@ -172,12 +175,35 @@ class Main {
 
         const midiSelectorContainer = document.createElement("div");
         midiSelectorContainer.classList.add("midi-selector-container");
+        midiSelectorContainer.style.visibility = "visible";
 
         this.midiSelector.selectEl.classList.add("midi-selector");
+        this.midiSelector.selectEl.onchange = (e: Event) => {
+            this.midiDeviceDisplay.updateInput(e.target!.value);
+        };
+
+        const toggleUsingMIDIButtonContainer = document.createElement("div");
+        toggleUsingMIDIButtonContainer.style.width = "100%";
+
+        //temp
+        toggleUsingMIDIButtonContainer.style.display = "none";
+
+        this.toggleUsingMIDIButton.textContent = "TURN ON MIDI";
+        this.toggleUsingMIDIButton.style.backgroundColor = "green";
+        this.toggleUsingMIDIButton.style.margin = "0 auto";
+
+        toggleUsingMIDIButtonContainer.append(this.toggleUsingMIDIButton);
 
         midiSelectorContainer.append(this.midiSelector.selectEl);
 
-        this.body.append(midiSelectorContainer, volumeLabel, this.volumeControlInput, this.volumeInputText);
+        this.body.append(
+            toggleUsingMIDIButtonContainer,
+            this.midiDeviceDisplay.container,
+            midiSelectorContainer,
+            volumeLabel,
+            this.volumeControlInput,
+            this.volumeInputText
+        );
 
         this.btnControlContainer.classList.add("btn-control-container");
 
