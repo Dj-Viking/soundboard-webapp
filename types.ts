@@ -1,5 +1,10 @@
+import { MIDIAccessRecord } from "./app/MIDIController";
+
 export {};
 declare global {
+    interface Navigator {
+        requestMIDIAccess(): Promise<MIDIAccessRecord>;
+    }
     type KeyboardKey = "Shift" | "Control" | "Alt" | "f";
     interface MyKeyboardEvent extends KeyboardEvent {
         key: KeyboardKey;

@@ -5,7 +5,7 @@ import { MIDIMappingPreference } from "./MIDIMapping";
 
 /**
  * @see https://www.w3.org/TR/webmidi/#idl-def-MIDIPort
- * interface MIDIPort : EventTarget {
+ * export interface MIDIPort : EventTarget {
     readonly    attribute DOMString               id;
     readonly    attribute DOMString?              manufacturer;
     readonly    attribute DOMString?              name;
@@ -18,12 +18,12 @@ import { MIDIMappingPreference } from "./MIDIMapping";
     Promise<MIDIPort> close ();
 };
  */
-interface MIDIPort {
+export interface MIDIPort {
     IODevice: MIDIInput | MIDIOutput;
     open: () => Promise<MIDIPort>;
     close: () => Promise<MIDIPort>;
 }
-interface TestMIDIConnectionEvent {
+export interface TestMIDIConnectionEvent {
     isTrusted: boolean;
     bubbles: boolean;
     cancelBubble: boolean;
@@ -31,7 +31,7 @@ interface TestMIDIConnectionEvent {
     composed: boolean;
     target: MIDIInput;
 }
-interface MIDIConnectionEvent {
+export interface MIDIConnectionEvent {
     isTrusted: boolean;
     bubbles: boolean;
     cancelBubble: boolean;
@@ -48,21 +48,21 @@ interface MIDIConnectionEvent {
     timeStamp: number;
     type: string | "statechange";
 }
-enum MIDIPortType {
+export enum MIDIPortType {
     input = "input",
     output = "output",
 }
-enum MIDIPortConnectionState {
+export enum MIDIPortConnectionState {
     open = "open",
     closed = "closed",
     pending = "pending",
 }
-enum MIDIPortDeviceState {
+export enum MIDIPortDeviceState {
     disconnected = "disconnected",
     connected = "connected",
 }
 
-interface TestMIDIMessageEvent {
+export interface TestMIDIMessageEvent {
     isTrusted: boolean;
     bubbles: boolean;
     cancelBubble: boolean;
@@ -71,7 +71,7 @@ interface TestMIDIMessageEvent {
     data: [number, number, number];
 }
 
-interface MIDIMessageEvent {
+export interface MIDIMessageEvent {
     isTrusted: boolean;
     bubbles: boolean;
     cancelBubble: boolean;
@@ -88,8 +88,8 @@ interface MIDIMessageEvent {
     type: "midimessage";
 }
 
-type onstatechangeHandler = null | ((event: MIDIConnectionEvent) => unknown);
-interface MIDIInput {
+export type onstatechangeHandler = null | ((event: MIDIConnectionEvent) => unknown);
+export interface MIDIInput {
     id: string;
     manufacturer: string;
     name: MIDIInputName;
@@ -100,7 +100,7 @@ interface MIDIInput {
     onstatechange: undefined | onstatechangeHandler;
     onmidimessage: undefined | null | ((event: MIDIMessageEvent) => unknown);
 }
-interface MIDIOutput {
+export interface MIDIOutput {
     connection: MIDIPortConnectionState;
     id: string;
     manufacturer: string;
@@ -112,20 +112,14 @@ interface MIDIOutput {
     onmidimessage: undefined | null | ((event: MIDIMessageEvent) => unknown);
 }
 
-type TestMIDIAccessRecord = null | {
-    readonly inputs: Map<MIDIInput["id"], MIDIInput>;
-    readonly outputs: Map<MIDIOutput["id"], MIDIOutput>;
-    onstatechange: null | ((event: TestMIDIConnectionEvent) => unknown);
-    readonly sysexEnabled: boolean;
-};
-interface MIDIAccessRecord {
+export interface MIDIAccessRecord {
     readonly inputs: Map<MIDIInput["id"], MIDIInput>;
     readonly outputs: Map<MIDIOutput["id"], MIDIOutput>;
     onstatechange: onstatechangeHandler;
     readonly sysexEnabled: boolean;
 }
 
-interface IMIDIController {
+export interface IMIDIController {
     inputs?: Array<MIDIInput>;
     inputs_size: number;
     outputs_size: number;
@@ -602,7 +596,30 @@ export class MIDIController {
         this._setInputs(access!.inputs);
         this._setOutputs(access!.outputs);
     }
+    public static async requestMIDIAccess(): Promise<MIDIAccessRecord> {
+        return window.navigator.requestMIDIAccess();
+    }
 
-    private _setInputs(inputs: MIDIAccessRecord["inputs"]) {}
+    public setInputCbs(
+        _onmidicb?: (event: MIDIMessageEvent) => unknown,
+        _onstatechangecb?: (event: MIDIConnectionEvent) => unknown
+    ): this {
+        for (let j = 0; j < this.inputs!.length; j++) {
+            this.inputs![j].onstatechange = _onstatechangecb;
+            this.inputs![j].onmidimessage = _onmidicb;
+        }
+        return this;
+    }
+
+    private _setInputs(inputs: MIDIAccessRecord["inputs"]) {
+        if (inputs.size > 0) {
+            const MIDI_INPUT_LIST_SIZE = inputs.size;
+            const entries = inputs.entries();
+
+            for (let i = 0; i < MIDI_INPUT_LIST_SIZE; i++) {
+                this.inputs!.push(entries.next().value[1]);
+            }
+        }
+    }
     private _setOutputs(inputs: MIDIAccessRecord["outputs"]) {}
 }
