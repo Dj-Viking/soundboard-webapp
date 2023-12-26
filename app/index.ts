@@ -3,6 +3,10 @@ import { Button } from "./Button.js";
 import { btnIDB } from "./IDB.js";
 import { Storage } from "./Storage.js";
 import { MIDIController } from "./MIDIController.js";
+import { MIDISelector } from "./MIDISelector.js";
+export function getRandomId(): string {
+    return (Math.random() * 10000).toString().replace(".", "_");
+}
 export type KeyControl = Record<KeyboardKey, boolean>;
 class Main {
     private keyControl: KeyControl = {
@@ -14,9 +18,11 @@ class Main {
     private isPlaying: boolean = false;
     private currentlyPlayingButton: Button | null = null;
     private allButtons: Record<Button["el"]["id"], Button> = {};
+    private midiController: MIDIController = {} as any;
 
     public constructor(
         private readonly body: HTMLElement = document.body,
+        private readonly midiSelector = new MIDISelector(),
         private readonly soundboardContainer: HTMLDivElement = document.createElement("div"),
         private readonly btnControlContainer: HTMLDivElement = document.createElement("div"),
         private readonly trackProgressBar: HTMLProgressElement = document.createElement("progress"),
@@ -36,7 +42,15 @@ class Main {
     }
 
     private initMIDI() {
-        console.error("TODO");
+        (async () => {
+            const midiAccess = await MIDIController.requestMIDIAccess();
+            if (midiAccess) {
+                this.midiController = new MIDIController(midiAccess);
+                if (this.midiController.inputs?.length) {
+                    this.midiSelector.appendMIDIDeviceNames(this.midiController.inputs);
+                }
+            }
+        })();
     }
 
     private animate = (_rafTimestamp?: number): void => {
@@ -152,9 +166,18 @@ class Main {
         this.header.classList.add("header");
 
         this.body.appendChild(this.header);
+
         const volumeLabel = document.createElement("p");
         volumeLabel.textContent = "Volume";
-        this.body.append(volumeLabel, this.volumeControlInput, this.volumeInputText);
+
+        const midiSelectorContainer = document.createElement("div");
+        midiSelectorContainer.classList.add("midi-selector-container");
+
+        this.midiSelector.selectEl.classList.add("midi-selector");
+
+        midiSelectorContainer.append(this.midiSelector.selectEl);
+
+        this.body.append(midiSelectorContainer, volumeLabel, this.volumeControlInput, this.volumeInputText);
 
         this.btnControlContainer.classList.add("btn-control-container");
 

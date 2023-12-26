@@ -1,6 +1,6 @@
 import { Storage } from "./Storage.js";
 import { btnIDB } from "./IDB.js";
-import { KeyControl } from "./index.js";
+import { KeyControl, getRandomId } from "./index.js";
 export type ButtonProps = {
     id: string;
     color: string;
@@ -23,16 +23,16 @@ export class Button {
         this.file = file;
 
         this.filenameSpan = document.createElement("span");
-        this.filenameSpan.id = this.getRandomId();
+        this.filenameSpan.id = getRandomId();
 
         this.audioEl = document.createElement("audio");
-        this.audioEl.id = this.getRandomId();
+        this.audioEl.id = getRandomId();
 
         this.fileInputEl = document.createElement("input");
         this.fileInputEl.type = "file";
         this.fileInputEl.style.display = "none";
         this.fileInputEl.accept = ".mp3,.wav";
-        this.fileInputEl.id = this.getRandomId() + "_file";
+        this.fileInputEl.id = getRandomId() + "_file";
 
         // TODO: append tooltip to show name of the file on the button?
         this.fileInputEl.addEventListener("change", () => {
@@ -61,7 +61,7 @@ export class Button {
 
         this.el = document.createElement("button");
 
-        id ? (this.el.id = id) : (this.el.id = this.getRandomId());
+        id ? (this.el.id = id) : (this.el.id = getRandomId());
 
         this.el.classList.add("soundboard-button");
 
@@ -72,7 +72,7 @@ export class Button {
 
         this.props = {
             color: this.color,
-            id: id || this.getRandomId(),
+            id: id || getRandomId(),
             file: file,
         };
 
@@ -106,10 +106,6 @@ export class Button {
             id: this.el.id,
             file: this.file,
         };
-    }
-
-    private getRandomId(): string {
-        return (Math.random() * 10000).toString().replace(".", "_");
     }
 
     private getRandomColor(): string {

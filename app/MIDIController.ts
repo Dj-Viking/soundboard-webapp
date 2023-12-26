@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
-import { MIDIMappingPreference } from "./MIDIMapping";
+import { MIDIMappingPreference } from "./MIDIMapping.js";
 
 /**
  * @see https://www.w3.org/TR/webmidi/#idl-def-MIDIPort
@@ -573,20 +573,18 @@ export const getControllerTableFromName = <N extends keyof typeof SUPPORTED_CONT
 
 export class MIDIController {
     public access = {} as MIDIAccessRecord;
+    public recentlyUsed: MIDIInputName = "TouchOSC Bridge";
+    public inputs = [] as Array<MIDIInput>;
+    public outputs = [] as Array<MIDIOutput>;
+    public inputs_size = 0;
+    public outputs_size = 0;
+    public online = false;
+    public controllerPreference: IMIDIController["controllerPreference"] = {
+        hasPreference: true,
+        midiMappingPreference: {} as any,
+    };
 
-    public constructor(
-        public recentlyUsed: MIDIInputName = "TouchOSC Bridge",
-        public controllerPreference: IMIDIController["controllerPreference"] = {
-            hasPreference: true,
-            midiMappingPreference: {} as any,
-        },
-        public inputs = [] as Array<MIDIInput>,
-        public outputs = [] as Array<MIDIOutput>,
-        public inputs_size = 0,
-        public outputs_size = 0,
-        public online = false,
-        access: MIDIAccessRecord = null as any
-    ) {
+    public constructor(access: MIDIAccessRecord = null as any) {
         if (access) {
             this.access = access;
             this.online = true;
@@ -607,6 +605,11 @@ export class MIDIController {
             console.error(error);
             return null;
         }
+    }
+
+    public static stripNativeLabelFromMIDIInputName(name: string): MIDIInputName {
+        if (!name) return "Not Found";
+        return name.replace(/(\d-\s)/g, "") as MIDIInputName;
     }
 
     public setInputCbs(

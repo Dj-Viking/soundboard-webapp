@@ -29,6 +29,16 @@ export class Styles {
                 width: 70%;
             }
 
+            .midi-selector-container {
+                width: 70%;
+                margin: 0 auto;
+            }
+
+            .midi-selector {
+                width: 100%;
+                margin: 0 auto;
+            }
+
             .btn-control-container {
                 display: flex;
                 flex-direction: column;

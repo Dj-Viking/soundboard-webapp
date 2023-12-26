@@ -7,7 +7,7 @@ import {
     DEFAULT_CALLBACK_TABLE,
     UIInterfaceDeviceName,
     DEFAULT_XONE_MAPPING_PREFERENCE_TABLE,
-} from "./MIDIController";
+} from "./MIDIController.js";
 
 export type MIDIMapping<N extends MIDIInputName> = Record<
     GenericControlName<N>,
