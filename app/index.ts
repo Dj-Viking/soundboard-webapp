@@ -2,6 +2,7 @@ import { Styles } from "./styles.js";
 import { Button } from "./Button.js";
 import { btnIDB } from "./IDB.js";
 import { Storage } from "./Storage.js";
+import { MIDIController } from "./MIDIController.js";
 export type KeyControl = Record<KeyboardKey, boolean>;
 class Main {
     private keyControl: KeyControl = {
@@ -31,6 +32,11 @@ class Main {
         this.init();
         this.soundboardSetup();
         window.requestAnimationFrame(this.animate);
+        this.initMIDI();
+    }
+
+    private initMIDI() {
+        console.error("TODO");
     }
 
     private animate = (_rafTimestamp?: number): void => {

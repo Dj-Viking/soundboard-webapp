@@ -6,6 +6,32 @@ console.log(`running server on http://localhost:${PORT}`);
 // TODO somehow condense this to serve all the files if they match a pattern or something
 const handleGetRequest: http.RequestListener = (req, res) => {
     switch (req.url) {
+        case "/MIDIMapping.js":
+            {
+                fs.readFile("./dist/app/MIDIMapping.js", (err, data) => {
+                    if (err?.code === "ENOENT") {
+                        console.log("file not found?", err.message);
+                        res.writeHead(404, "not found");
+                        res.end();
+                    }
+                    res.writeHead(200, { "Content-Type": "text/javascript" });
+                    res.end(data, "utf-8");
+                });
+            }
+            break;
+        case "/MIDIController.js":
+            {
+                fs.readFile("./dist/app/MIDIController.js", (err, data) => {
+                    if (err?.code === "ENOENT") {
+                        console.log("file not found?", err.message);
+                        res.writeHead(404, "not found");
+                        res.end();
+                    }
+                    res.writeHead(200, { "Content-Type": "text/javascript" });
+                    res.end(data, "utf-8");
+                });
+            }
+            break;
         case "/IDB.js":
             {
                 fs.readFile("./dist/app/IDB.js", (err, data) => {
@@ -85,6 +111,7 @@ const handleGetRequest: http.RequestListener = (req, res) => {
             }
             break;
         default:
+            console.log("\x1b[35m", `[ERROR]: not found ${req.url}`, "\x1b[00m");
             res.writeHead(404);
             res.end();
     }
