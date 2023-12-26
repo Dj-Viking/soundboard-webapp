@@ -4,34 +4,33 @@ import { btnIDB } from "./IDB.js";
 import { Storage } from "./Storage.js";
 export type KeyControl = Record<KeyboardKey, boolean>;
 class Main {
-    public body: HTMLElement;
-    public soundboardContainer: HTMLDivElement;
-    public btnControlContainer: HTMLDivElement;
-    public ctrlKeyMessageSpan: HTMLSpanElement;
-    public fKeyMessageSpan: HTMLSpanElement;
-    public addButtonEl: HTMLButtonElement;
-    public header: HTMLHeadingElement;
-    public keyControl: KeyControl = {
+    private keyControl: KeyControl = {
         Alt: false,
         f: false,
         Control: false,
         Shift: false,
     };
+    private isPlaying: boolean = false;
+    private allButtons: Button[] = [];
 
-    public constructor() {
-        this.body = document.body;
-        this.header = document.createElement("h1");
-        this.btnControlContainer = document.createElement("div");
-        this.ctrlKeyMessageSpan = document.createElement("span");
-        this.fKeyMessageSpan = document.createElement("span");
-        this.addButtonEl = document.createElement("button");
-        this.soundboardContainer = document.createElement("div");
+    public constructor(
+        private readonly body: HTMLElement = document.body,
+        private readonly soundboardContainer: HTMLDivElement = document.createElement("div"),
+        private readonly btnControlContainer: HTMLDivElement = document.createElement("div"),
+        private readonly ctrlKeyMessageSpan: HTMLSpanElement = document.createElement("span"),
+        private readonly volumeControlInput: HTMLInputElement = document.createElement("input"),
+        private readonly volumeInputText: HTMLSpanElement = document.createElement("span"),
+        private readonly fKeyMessageSpan: HTMLSpanElement = document.createElement("span"),
+        private readonly addButtonEl: HTMLButtonElement = document.createElement("button"),
+        private readonly stopButtonEl: HTMLButtonElement = document.createElement("button"),
+        private readonly header: HTMLHeadingElement = document.createElement("h2")
+    ) {
         this.init();
         this.soundboardSetup();
     }
 
     // reset keydown updates
-    public handleKeyUp = () => {
+    private handleKeyUp = () => {
         this.keyControl = {
             Alt: false,
             f: false,
@@ -42,7 +41,7 @@ class Main {
         this.fKeyMessageSpan.style.visibility = "hidden";
     };
 
-    public handleKeyDown = (event: MyKeyboardEvent) => {
+    private handleKeyDown = (event: MyKeyboardEvent) => {
         switch (event.key) {
             case "Shift":
                 {
@@ -77,22 +76,45 @@ class Main {
                 break;
         }
     };
-    public init(): void {
+
+    private handleVolumeChange = (e: Event, audioEl?: HTMLAudioElement): void => {
+        this.volumeInputText.textContent = `${e.target!.value}`;
+        if (audioEl) {
+            audioEl.volume = e.target!.value;
+        }
+    };
+
+    private init(): void {
+        document.head.appendChild(new Styles().tag);
+
         if (!localStorage.getItem("buttons")) {
             localStorage.setItem("buttons", JSON.stringify([]));
         }
+
         document.addEventListener("drag", (e) => {
             console.log("drag event", e);
         });
         document.addEventListener("keydown", this.handleKeyDown as any);
         document.addEventListener("keyup", this.handleKeyUp);
 
-        document.head.appendChild(new Styles().tag);
+        this.volumeControlInput.oninput = (e) => this.handleVolumeChange(e);
+
+        this.volumeControlInput.type = "range";
+        this.volumeControlInput.min = "0";
+        this.volumeControlInput.max = ".5";
+        this.volumeControlInput.step = ".001";
+        this.volumeControlInput.value = ".5";
+
+        this.volumeControlInput.style.width = "30%";
+        this.volumeInputText.textContent = `${this.volumeControlInput.value}`;
+        this.volumeInputText.style.fontSize = "20px";
+        this.volumeInputText.style.paddingLeft = "20px";
 
         this.header.innerText = "have fun with the soundboard!";
         this.header.classList.add("header");
 
         this.body.appendChild(this.header);
+        this.body.append(this.volumeControlInput, this.volumeInputText);
 
         this.btnControlContainer.classList.add("btn-control-container");
 
@@ -109,6 +131,7 @@ class Main {
 
         this.btnControlContainer.append(
             this.addButtonEl,
+            this.stopButtonEl,
             this.ctrlKeyMessageSpan,
             this.fKeyMessageSpan
         );
@@ -117,7 +140,7 @@ class Main {
     }
 
     private addNewButtonToBoard = (_event: MouseEvent) => {
-        Storage.getStorageButtons().then((storageButtons) => {
+        Storage.getStorageButtons().then((storageButtons): void => {
             const btn = new Button({});
 
             btnIDB.handleRequest("put", btn.props);
@@ -127,6 +150,16 @@ class Main {
             btn.el.addEventListener("click", (_e) => {
                 this.boardButtonClickHandler(this.keyControl, btn);
             });
+            this.allButtons.push(btn);
+
+            this.stopButtonEl.onclick = () => {
+                this.allButtons.forEach((b) => {
+                    b.audioEl.currentTime = 0;
+                    b.audioEl.pause();
+                    b.isPlaying = false;
+                    this.isPlaying = false;
+                });
+            };
 
             this.soundboardContainer.appendChild(btn.el);
 
@@ -138,13 +171,13 @@ class Main {
         switch (true) {
             case keyControl.f:
                 {
-                    if (!btn.hasAudioFile) {
-                        btn.fileInputEl.click();
-                    } else {
-                        (async () => {
+                    (async () => {
+                        if (!btn.hasAudioFile) {
+                            btn.fileInputEl.click();
+                        } else {
                             await btn.audioEl.play();
-                        })();
-                    }
+                        }
+                    })();
                 }
                 break;
             case keyControl.Control:
@@ -158,19 +191,34 @@ class Main {
                     });
                 }
                 break;
-            case btn.hasAudioFile &&
-                Object.values(this.keyControl).every((pressedKey) => pressedKey === false):
+            case Object.values(this.keyControl).every((pressedKey) => pressedKey === false):
                 {
                     if (btn.hasAudioFile) {
                         (async () => {
+                            if (this.isPlaying) {
+                                this.allButtons.forEach((_btn) => {
+                                    if (_btn.audioEl.id !== btn.audioEl.id) {
+                                        _btn.audioEl.pause();
+                                        _btn.isPlaying = false;
+                                        _btn.audioEl.currentTime = 0;
+                                    }
+                                });
+                            }
                             if (!btn.isPlaying) {
                                 btn.isPlaying = true;
+                                this.isPlaying = true;
+                                btn.audioEl.volume = Number(this.volumeControlInput.value);
+                                this.volumeControlInput.oninput = (e) => {
+                                    this.handleVolumeChange(e, btn.audioEl);
+                                };
                                 await btn.audioEl.play();
                             } else {
-                                btn.isPlaying = false;
                                 btn.audioEl.pause();
-                                // restart the track
+                                // restart the track to the beginning
                                 btn.audioEl.currentTime = 0;
+                                setTimeout(async () => {
+                                    await btn.audioEl.play();
+                                }, 1);
                             }
                         })();
                     }
@@ -184,7 +232,10 @@ class Main {
     };
 
     private soundboardSetup(): void {
-        this.addButtonEl.classList.add("add-button");
+        this.stopButtonEl.classList.add("board-button");
+        this.stopButtonEl.innerText = "Stop All Sound 🛑";
+
+        this.addButtonEl.classList.add("board-button");
         this.addButtonEl.innerText = "Add A New Button +";
         this.addButtonEl.addEventListener("click", this.addNewButtonToBoard);
         this.soundboardContainer.classList.add("soundboard-container");
@@ -196,8 +247,18 @@ class Main {
                 btn.el.addEventListener("click", (_e) => {
                     this.boardButtonClickHandler(this.keyControl, btn);
                 });
+                this.allButtons.push(btn);
                 this.soundboardContainer.appendChild(btn.el);
             });
+
+            this.stopButtonEl.onclick = () => {
+                btns.forEach((b) => {
+                    b.audioEl.currentTime = 0;
+                    b.audioEl.pause();
+                    b.isPlaying = false;
+                    this.isPlaying = false;
+                });
+            };
         });
     }
 

@@ -31,7 +31,7 @@ export class Styles {
                 align-items: center;
             }
 
-            .add-button {
+            .board-button {
                 color: white;
                 height: ${this.ADD_BUTTON_DIM}px;
                 width: auto;

@@ -6,12 +6,12 @@ export type ButtonProps = {
     file?: File | null;
 };
 export class Button {
-    public el: HTMLButtonElement;
-    public color: string = "";
     private readonly COLORS: string[] = ["red", "grey", "green", "blue", "white"];
-    public audioEl: HTMLAudioElement;
-    public fileInputEl: HTMLInputElement;
-    public filenameSpan: HTMLSpanElement;
+    public readonly el: HTMLButtonElement;
+    public readonly audioEl: HTMLAudioElement;
+    public readonly fileInputEl: HTMLInputElement;
+    public readonly filenameSpan: HTMLSpanElement;
+    public color: string = "";
     public hasAudioFile: boolean = false;
     public isPlaying: boolean = false;
     public file?: File | null = null;
