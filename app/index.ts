@@ -13,7 +13,6 @@ class Main {
     private isPlaying: boolean = false;
     private currentlyPlayingButton: Button | null = null;
     private allButtons: Record<Button["el"]["id"], Button> = {};
-    private RAFId: number = 0;
 
     public constructor(
         private readonly body: HTMLElement = document.body,
@@ -31,7 +30,7 @@ class Main {
     ) {
         this.init();
         this.soundboardSetup();
-        this.RAFId = window.requestAnimationFrame(this.animate);
+        window.requestAnimationFrame(this.animate);
     }
 
     private animate = (_rafTimestamp?: number): void => {
@@ -40,7 +39,7 @@ class Main {
             this.refreshTrackProgress(this.currentlyPlayingButton!.audioEl);
         }
 
-        this.RAFId = window.requestAnimationFrame(this.animate);
+        window.requestAnimationFrame(this.animate);
     };
 
     /**
