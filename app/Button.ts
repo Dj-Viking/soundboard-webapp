@@ -7,7 +7,7 @@ export type ButtonProps = {
     file?: File | null;
 };
 export class Button {
-    private readonly COLORS: string[] = ["red", "grey", "green", "blue", "white"];
+    private readonly COLORS: string[] = ["red", "grey", "green", "blue"];
     public readonly el: HTMLButtonElement;
     public readonly audioEl: HTMLAudioElement;
     public readonly fileInputEl: HTMLInputElement;
@@ -24,6 +24,7 @@ export class Button {
 
         this.filenameSpan = document.createElement("span");
         this.filenameSpan.id = getRandomId();
+        this.filenameSpan.style.color = "white";
 
         this.audioEl = document.createElement("audio");
         this.audioEl.id = getRandomId();

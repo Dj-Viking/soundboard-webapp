@@ -12,9 +12,12 @@ export class MIDIDeviceDisplay {
         this.container.style.borderRadius = "10px";
         this.container.style.marginBottom = "10px";
         this.container.style.border = "solid green 3px";
+
         this.deviceNameSpan.style.margin = "0 auto";
+        this.deviceNameSpan.style.color = "white";
         this.deviceNameSpan.textContent =
             MIDIController.stripNativeLabelFromMIDIInputName(inputName as MIDIInputName) || null;
+
         this.container.append(this.deviceNameSpan);
     }
 

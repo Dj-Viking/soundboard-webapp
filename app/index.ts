@@ -164,6 +164,7 @@ class Main {
         this.volumeInputText.textContent = `${this.volumeControlInput.value}`;
         this.volumeInputText.style.fontSize = "20px";
         this.volumeInputText.style.paddingLeft = "20px";
+        this.volumeInputText.style.color = "white";
 
         this.header.innerText = "have fun with the soundboard!";
         this.header.classList.add("header");
@@ -172,7 +173,7 @@ class Main {
 
         const volumeLabel = document.createElement("p");
         volumeLabel.textContent = "Volume";
-
+        volumeLabel.style.color = "white";
         const midiSelectorContainer = document.createElement("div");
         midiSelectorContainer.classList.add("midi-selector-container");
         midiSelectorContainer.style.visibility = "visible";
@@ -220,6 +221,7 @@ class Main {
         this.trackProgressBar.classList.add("track-progress");
 
         this.trackTimeTextSpan.textContent = "00:00:00 -- 00:00:00";
+        this.trackTimeTextSpan.style.color = "white";
 
         this.btnControlContainer.append(
             this.addButtonEl,
