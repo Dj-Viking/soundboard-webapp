@@ -163,7 +163,6 @@ class Main {
         this.volumeControlInput.style.width = "30%";
         this.volumeInputText.textContent = `${this.volumeControlInput.value}`;
         this.volumeInputText.style.fontSize = "20px";
-        this.volumeInputText.style.paddingLeft = "20px";
         this.volumeInputText.style.color = "white";
 
         this.header.innerText = "have fun with the soundboard!";
@@ -174,6 +173,11 @@ class Main {
         const volumeLabel = document.createElement("p");
         volumeLabel.textContent = "Volume";
         volumeLabel.style.color = "white";
+
+        const volumeContainer = document.createElement("div");
+        volumeContainer.classList.add("volume-container");
+        volumeContainer.append(volumeLabel, this.volumeControlInput, this.volumeInputText);
+
         const midiSelectorContainer = document.createElement("div");
         midiSelectorContainer.classList.add("midi-selector-container");
         midiSelectorContainer.style.visibility = "visible";
@@ -201,9 +205,7 @@ class Main {
             toggleUsingMIDIButtonContainer,
             this.midiDeviceDisplay.container,
             midiSelectorContainer,
-            volumeLabel,
-            this.volumeControlInput,
-            this.volumeInputText
+            volumeContainer
         );
 
         this.btnControlContainer.classList.add("btn-control-container");
