@@ -129,14 +129,75 @@ export class Fader extends MySVG {
     }
 }
 export class Knob extends MySVG {
-    public constructor(public readonly el: SVGElement = document.createElementNS("http://www.w3.org/2000/svg", "svg")) {
+    public constructor(
+        private readonly circle = document.createElementNS("http://www.w3.org/2000/svg", "circle"),
+        private readonly rect1 = document.createElementNS("http://www.w3.org/2000/svg", "rect"),
+        private readonly rect2 = document.createElementNS("http://www.w3.org/2000/svg", "rect"),
+        private readonly rect3 = document.createElementNS("http://www.w3.org/2000/svg", "rect"),
+        private readonly path1 = document.createElementNS("http://www.w3.org/2000/svg", "path"),
+        private readonly path2 = document.createElementNS("http://www.w3.org/2000/svg", "path")
+    ) {
         super();
         // <svg width="91" height="106" viewBox="0 0 91 136" fill="none" xmlns="http://www.w3.org/2000/svg">
-        el.setAttribute("width", "91");
-        el.setAttribute("height", "106");
-        el.setAttribute("viewBox", "0 0 91 106");
-        el.setAttribute("fill", "none");
-        el.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-        el.style.display = "none";
+        this.el.setAttribute("width", "91");
+        this.el.setAttribute("height", "106");
+        this.el.setAttribute("viewBox", "0 0 91 106");
+        this.el.setAttribute("fill", "none");
+        this.el.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+        this.el.style.display = "none";
+
+        this.circle.setAttribute("cx", "45.5");
+        this.circle.setAttribute("cy", "61.5");
+        this.circle.setAttribute("r", "32.5");
+        this.circle.setAttribute("fill", "white");
+        this.el.appendChild(circle);
+
+        this.rect1.setAttribute("x", "45");
+        this.rect1.setAttribute("y", "29");
+        this.rect1.setAttribute("width", "4");
+        this.rect1.setAttribute("height", "21");
+        this.rect1.setAttribute("transform", `${this.translateKnobRect(0)}`);
+        this.rect1.setAttribute("fill", `black`);
+        this.el.appendChild(rect1);
+
+        this.rect2.setAttribute("x", "44");
+        this.rect2.setAttribute("width", "4");
+        this.rect2.setAttribute("height", "16");
+        this.rect2.setAttribute("fill", "white");
+        this.el.appendChild(rect2);
+
+        this.rect3.setAttribute("x", "3.75283");
+        this.rect3.setAttribute("y", "108.214");
+        this.rect3.setAttribute("width", "4");
+        this.rect3.setAttribute("height", "16");
+        this.rect3.setAttribute("transform", "rotate(-134.99 3.75283 108.214)");
+        this.rect3.setAttribute("fill", "white");
+        this.el.appendChild(this.rect3);
+
+        this.path1.setAttribute(
+            "d",
+            "M90.5 62C90.5 87.6967 70.3377 108.5 45.5 108.5C20.6623 108.5 0.5 87.6967 0.5 62C0.5 36.3033 20.6623 15.5 45.5 15.5C70.3377 15.5 90.5 36.3033 90.5 62Z"
+        );
+        this.path1.setAttribute("stroke", "white");
+        this.el.appendChild(this.path1);
+
+        this.path2.setAttribute("d", "M72 95H23.5H17.5L3.5 110L16 135H74L86.5 111.5L81.5 105.5L72 95Z");
+        this.path2.setAttribute("fill", "black");
+        this.path2.setAttribute("stroke", "black");
+        this.el.appendChild(this.path2);
+    }
+
+    private translateKnobRect(intensity: number): string {
+        const rotationPercentage = calcPositionFromRange(intensity, 0, 100, 0, 127);
+
+        const angle = calcPositionFromRange(rotationPercentage, -140, 137, 0, 100);
+
+        const vec2 = { x: 45, y: 62 };
+
+        return `rotate(${angle}, ${vec2.x}, ${vec2.y})`;
+    }
+
+    public override moveSvgFromMessage(intensity: number): void {
+        this.rect1.setAttribute("transform", `${this.translateKnobRect(intensity)}`);
     }
 }

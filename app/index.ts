@@ -85,17 +85,16 @@ class Main {
         controlName: ControllerControlNamesLookup<typeof name>
     ): void {
         this.usingFader = /fader/g.test(controlName);
-        this.usingKnob = /fader/g.test(controlName);
+        this.usingKnob = /knob/g.test(controlName);
 
         this.fader.handleShow(this.usingFader);
         if (this.usingFader) {
             this.fader.moveSvgFromMessage(intensity);
         }
-        this.knob.handleShow(this.usingFader);
+        this.knob.handleShow(this.usingKnob);
         if (this.usingKnob) {
             this.knob.moveSvgFromMessage(intensity);
         }
-
         this.midiController.recentlyUsed = name;
         this.midiSelector.selectDevice(name);
         this.midiDeviceDisplay.updateInput(name);
@@ -443,7 +442,7 @@ class Main {
     }
 
     public run(): void {
-        console.log("hello world");
+        console.log("hello woasdfasdfaspodifija;sldkfja;lsdkfj;lasdkjsrld");
     }
 }
 
