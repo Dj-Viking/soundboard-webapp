@@ -10,9 +10,10 @@ export type ButtonProps = {
 export class Button {
     private readonly COLORS: string[] = ["red", "grey", "green", "blue"];
     public readonly el: HTMLButtonElement;
-    public readonly audioEl: HTMLAudioElement;
-    public readonly fileInputEl: HTMLInputElement;
-    public readonly filenameSpan: HTMLSpanElement;
+    public readonly btnAssignmentSpan: HTMLSpanElement = document.createElement("span");
+    public readonly audioEl: HTMLAudioElement = document.createElement("audio");
+    public readonly fileInputEl: HTMLInputElement = document.createElement("input");
+    public readonly filenameSpan: HTMLSpanElement = document.createElement("span");
     public color: string = "";
     public hasAudioFile: boolean = false;
     public isPlaying: boolean = false;
@@ -23,14 +24,11 @@ export class Button {
 
         this.file = file;
 
-        this.filenameSpan = document.createElement("span");
         this.filenameSpan.id = getRandomId();
         this.filenameSpan.style.color = "white";
 
-        this.audioEl = document.createElement("audio");
         this.audioEl.id = getRandomId();
 
-        this.fileInputEl = document.createElement("input");
         this.fileInputEl.type = "file";
         this.fileInputEl.style.display = "none";
         this.fileInputEl.accept = ".mp3,.wav";

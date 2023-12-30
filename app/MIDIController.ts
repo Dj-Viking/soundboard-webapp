@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
-import { MIDIMappingPreference } from "./MIDIMapping.js";
+import { MIDIMapping, MIDIMappingPreference } from "./MIDIMapping.js";
 
 /**
  * @see https://www.w3.org/TR/webmidi/#idl-def-MIDIPort
@@ -131,13 +131,9 @@ export interface IMIDIController {
     inputs_size: number;
     outputs_size: number;
     recentlyUsed: MIDIInputName;
-    controllerPreference: {
-        hasPreference: boolean;
-        midiMappingPreference: MIDIMappingPreference<MIDIInputName>;
-    };
+    allMIDIMappingPreferences: Record<MIDIInputName, MIDIMappingPreference<MIDIInputName>>;
     outputs?: Array<MIDIOutput>;
     online?: boolean;
-    getInstance: () => this;
 }
 export type MyIndexToKeyMap = Record<number, string>;
 export const MY_INDEX_TO_KEY_MAP = {
@@ -269,9 +265,10 @@ export const DEFAULT_XONE_CONTROLNAME_TO_CHANNEL_MAPPING: Record<XONEK2_ControlN
 
 export type UIInterfaceDeviceName<
     N extends (typeof possibleButtonNumbers)[number] = (typeof possibleButtonNumbers)[number]
-> = ButtonName<N>;
+> = ButtonName<N> | "volume_fader";
 
 export const DEFAULT_XONE_UI_TO_CONTROLNAME_MAPPING: Record<UIInterfaceDeviceName, XONEK2_ControlNames> = {
+    volume_fader: "" as any,
     button_1_position: "" as any,
     button_2_position: "" as any,
     button_3_position: "" as any,
@@ -475,6 +472,7 @@ export const DEFAULT_TOUCHOSC_MAPPING_PREFERENCE_TABLE: Record<
 };
 
 export const DEFAULT_TOUCHOSC_UI_TO_CONTROLNAME_MAPPING: Record<UIInterfaceDeviceName, TouchOscBridgeControlNames> = {
+    volume_fader: "" as any,
     button_1_position: "" as any,
     button_2_position: "" as any,
     button_3_position: "" as any,
@@ -487,6 +485,7 @@ export const DEFAULT_TOUCHOSC_UI_TO_CONTROLNAME_MAPPING: Record<UIInterfaceDevic
 };
 
 export const DEFAULT_CALLBACK_TABLE: Record<UIInterfaceDeviceName, (...args: any[]) => void> = {
+    volume_fader: (..._args: any[]) => void 0,
     button_1_position: (..._args: any[]) => void 0,
     button_2_position: (..._args: any[]) => void 0,
     button_3_position: (..._args: any[]) => void 0,
@@ -582,7 +581,7 @@ export const getControllerTableFromName = <N extends keyof typeof SUPPORTED_CONT
     return null;
 };
 
-export class MIDIController {
+export class MIDIController implements IMIDIController {
     public access = {} as MIDIAccessRecord;
     public recentlyUsed: MIDIInputName = "TouchOSC Bridge";
     public inputs = [] as Array<MIDIInput>;
@@ -590,10 +589,7 @@ export class MIDIController {
     public inputs_size = 0;
     public outputs_size = 0;
     public online = false;
-    public controllerPreference: IMIDIController["controllerPreference"] = {
-        hasPreference: true,
-        midiMappingPreference: {} as any,
-    };
+    public allMIDIMappingPreferences: Record<MIDIInputName, MIDIMappingPreference<MIDIInputName>> = {} as any;
 
     public constructor(access: MIDIAccessRecord = null as any) {
         if (access) {
@@ -601,10 +597,6 @@ export class MIDIController {
             this.online = true;
             this.inputs_size = access.inputs.size;
             this.outputs_size = access.outputs.size;
-            this.controllerPreference = {
-                hasPreference: true,
-                midiMappingPreference: new MIDIMappingPreference("TouchOSC Bridge"),
-            };
             this._setInputs(access.inputs);
         }
     }

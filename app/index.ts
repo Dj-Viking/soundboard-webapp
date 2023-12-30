@@ -9,6 +9,8 @@ import {
     MIDIMessageEvent,
     SUPPORTED_CONTROLLERS,
     UIInterfaceDeviceName,
+    XONEK2_MIDI_CHANNEL_TABLE,
+    getControllerTableFromName,
 } from "./MIDIController.js";
 import { MIDISelector } from "./MIDISelector.js";
 import { MIDIDeviceDisplay } from "./MIDIDeviceDisplay.js";
@@ -36,12 +38,7 @@ class Main {
     private usingFader: boolean = false;
     private usingKnob: boolean = false;
     private isMIDIEdit: boolean = false;
-    private midiMappingInUse: {
-        callbackMap: CallbackMapping;
-        recentlyUsed: MIDIInputName;
-        hasPreference: boolean;
-        midiMappingPreference: Record<MIDIInputName, MIDIMapping<MIDIInputName>>;
-    } = {} as any;
+    private MidiMappingPreference: MIDIMappingPreference<MIDIInputName> = new MIDIMappingPreference("Not Found");
 
     public constructor(
         private readonly body: HTMLElement = document.body,
@@ -86,8 +83,6 @@ class Main {
         })();
     }
 
-    private toggleShowUIMIDIMapping = () => {};
-
     private handleSvgMovement(
         name: MIDIInputName,
         intensity: number,
@@ -121,19 +116,78 @@ class Main {
 
             this.handleSvgMovement(name, intensity, controlName);
             this.midiDeviceDisplay.channelSpan.textContent = "Channel: " + channel.toString();
-            this.midiDeviceDisplay.uiNameSpan.textContent = controlName;
+            this.midiDeviceDisplay.controlNameSpan.textContent = controlName;
             this.midiDeviceDisplay.intensitySpan.textContent = "Intensity: " + intensity.toString();
             // move displayed svg rects
 
-            let midiMappingPreference: MIDIMappingPreference<typeof strippedName> = null as any;
-
             if (this.isListeningForMIDIMappingEdits) {
-                console.error("listening for edits", "TODO");
-                console.log("listening for mapping edits");
+                this.MidiMappingPreference = new MIDIMappingPreference(strippedName);
+                this.midiController.allMIDIMappingPreferences[strippedName] = this.MidiMappingPreference;
+
+                this.MidiMappingPreference.mapping[controlName] = {
+                    channel,
+                    uiName: this.mappingEditOptions.uiName,
+                };
+
+                console.log("midi mapping preference currently", this.MidiMappingPreference, "\n", this.midiController);
+                this.isListeningForMIDIMappingEdits = false;
             }
+
+            this.handleMIDIMessage(strippedName, e);
         };
 
         this.midiController.setInputCbs(midicb, () => {});
+    };
+
+    // TODO: this works - just need to store the mapping in storage somewhere
+    private handleMIDIMessage(name: MIDIInputName, midiMessageEvent: MIDIMessageEvent) {
+        this.invokeCallbackOrWarn(name, midiMessageEvent);
+    }
+
+    private warnCallbackIfError<P extends keyof CallbackMapping>(
+        callback: CallbackMapping[P],
+        mapping: MIDIMappingPreference<typeof name>["mapping"],
+        channel: number,
+        name: MIDIInputName
+    ): boolean {
+        if (typeof callback !== "function") {
+            console.warn(
+                "callback was not a function, cannot proceed to call the callback",
+                "\ncallback was => ",
+                callback,
+                "\n mapping was => ",
+                mapping,
+                "\n control name was => ",
+                getControllerTableFromName(name)[channel],
+                "\n input name was => ",
+                name
+            );
+            console.warn("did you assign a ui control to that midi control?");
+            return false;
+        }
+        return true;
+    }
+
+    private invokeCallbackOrWarn = (name: MIDIInputName, midiMessageEvent: MIDIMessageEvent): void => {
+        const channel = midiMessageEvent.data[1];
+        const intensity = midiMessageEvent.data[2];
+
+        switch (name) {
+            case "XONE:K2 MIDI":
+                {
+                    const callbackMap = this.MidiMappingPreference.callbackMap;
+                    const mapping = this.MidiMappingPreference.mapping;
+                    const callback = callbackMap[mapping[XONEK2_MIDI_CHANNEL_TABLE[channel]].uiName];
+
+                    if (this.warnCallbackIfError(callback, mapping, channel, name)) {
+                        callback(intensity);
+                    }
+                }
+                break;
+            default: {
+                console.warn("unhandled midi controller mapping", name);
+            }
+        }
     };
 
     private animate = (_rafTimestamp?: number): void => {
@@ -184,9 +238,11 @@ class Main {
             [event.key]: true,
         };
         switch (true) {
-            case event.key === "m" || event.key === "M": {
-                this.handleMIDIEditModeButtonClick();
-            }
+            case event.key === "m" || event.key === "M":
+                {
+                    this.handleMIDIEditModeButtonClick();
+                }
+                break;
             case event.key === "f":
                 {
                     this.fKeyMessageSpan.style.visibility = "visible";
@@ -214,11 +270,12 @@ class Main {
 
     private handleMIDIEditModeButtonClick = (): void => {
         this.isMIDIEdit = !this.isMIDIEdit;
-        console.log(this.isMIDIEdit);
         if (this.isMIDIEdit) {
+            this.midiDeviceDisplay.showAssignmentSpans();
             this.toggleMIDIEditModeButton.textContent = "MIDI Mapping Edit Mode ON";
             this.toggleMIDIEditModeButton.style.backgroundColor = "green";
         } else {
+            this.midiDeviceDisplay.hideAssignmentSpans();
             this.toggleMIDIEditModeButton.textContent = "MIDI Mapping Edit Mode OFF";
             this.toggleMIDIEditModeButton.style.backgroundColor = "grey";
         }
@@ -241,6 +298,15 @@ class Main {
         this.volumeControlInput.max = ".5";
         this.volumeControlInput.step = ".001";
         this.volumeControlInput.value = ".5";
+        this.volumeControlInput.onclick = () => {
+            if (this.isMIDIEdit) {
+                this.isListeningForMIDIMappingEdits = true;
+                console.log("listening for edits on volume input");
+                this.mappingEditOptions = {
+                    uiName: "volume_fader",
+                };
+            }
+        };
 
         this.volumeControlInput.style.width = "30%";
         this.volumeInputText.textContent = `${this.volumeControlInput.value}`;
@@ -267,10 +333,17 @@ class Main {
         const volumeLabel = document.createElement("p");
         volumeLabel.textContent = "Volume";
         volumeLabel.style.color = "white";
+        volumeLabel.style.marginTop = "5px";
+        volumeLabel.style.marginBottom = "5px";
 
         const volumeContainer = document.createElement("div");
         volumeContainer.classList.add("volume-container");
-        volumeContainer.append(volumeLabel, this.volumeControlInput, this.volumeInputText);
+        volumeContainer.append(
+            volumeLabel,
+            this.midiDeviceDisplay.faderUiControlAssignmentSpan,
+            this.volumeControlInput,
+            this.volumeInputText
+        );
 
         const midiSelectorContainer = document.createElement("div");
         midiSelectorContainer.classList.add("midi-selector-container");
@@ -284,7 +357,7 @@ class Main {
         const controlSVGContainer = document.createElement("div");
         controlSVGContainer.classList.add("control-svg-container");
 
-        controlSVGContainer.append(this.fader.el, this.knob.el, this.midiDeviceDisplay.uiNameSpan);
+        controlSVGContainer.append(this.fader.el, this.knob.el, this.midiDeviceDisplay.controlNameSpan);
 
         this.midiDeviceDisplay.controlDisplayContainer.append(controlSVGContainer, this.midiDeviceDisplay.intensityDiv);
 

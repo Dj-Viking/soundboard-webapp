@@ -20,7 +20,8 @@ export type MIDIMapping<N extends MIDIInputName> = Record<
 export type CallbackMapping = typeof DEFAULT_CALLBACK_TABLE;
 
 /**
- *
+ * this example shows the collection of preferences that would be stored
+ * in some storage place eventually
  * @example
  * const preference = {
  *     [this.name]: {
@@ -88,14 +89,20 @@ export class MIDIMappingPreference<N extends MIDIInputName> {
     }
 
     private static createButtonCallback(btnId: string): void {
-        console.error("TODO");
+        console.error("TODO", "btn id CALLBACK MAPPING", btnId);
     }
 
     public static generateCallbackBasedOnUIName<P extends keyof CallbackMapping>(
         uiName: UIInterfaceDeviceName
     ): CallbackMapping[P] {
         switch (uiName) {
+            case "volume_fader": {
+                return () => {
+                    console.error("todo VOLUME FADER MAPPING");
+                };
+            }
             case "button_1_position": {
+                this.createButtonCallback("ksdfkjd");
                 return () => {};
             }
             default:
