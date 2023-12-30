@@ -5,7 +5,7 @@ declare global {
     interface Navigator {
         requestMIDIAccess(): Promise<MIDIAccessRecord>;
     }
-    type KeyboardKey = "Shift" | "Control" | "Alt" | "f";
+    type KeyboardKey = "Shift" | "Control" | "Alt" | "f" | "m" | "M";
     interface MyKeyboardEvent extends KeyboardEvent {
         key: KeyboardKey;
     }

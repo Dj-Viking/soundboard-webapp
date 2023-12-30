@@ -18,6 +18,8 @@ import { Fader, Knob } from "./Svgs.js";
 export type KeyControl = Record<KeyboardKey, boolean>;
 class Main {
     private keyControl: KeyControl = {
+        m: false,
+        M: false,
         Alt: false,
         f: false,
         Control: false,
@@ -83,6 +85,8 @@ class Main {
             }
         })();
     }
+
+    private toggleShowUIMIDIMapping = () => {};
 
     private handleSvgMovement(
         name: MIDIInputName,
@@ -163,6 +167,8 @@ class Main {
     // reset keydown updates
     private handleKeyUp = () => {
         this.keyControl = {
+            m: false,
+            M: false,
             Alt: false,
             f: false,
             Control: false,
@@ -173,30 +179,21 @@ class Main {
     };
 
     private handleKeyDown = (event: MyKeyboardEvent) => {
-        switch (event.key) {
-            case "Shift":
+        this.keyControl = {
+            ...this.keyControl,
+            [event.key]: true,
+        };
+        switch (true) {
+            case event.key === "m" || event.key === "M": {
+                this.handleMIDIEditModeButtonClick();
+            }
+            case event.key === "f":
                 {
-                    this.keyControl = {
-                        ...this.keyControl,
-                        Shift: true,
-                    };
-                }
-                break;
-            case "f":
-                {
-                    this.keyControl = {
-                        ...this.keyControl,
-                        f: true,
-                    };
                     this.fKeyMessageSpan.style.visibility = "visible";
                 }
                 break;
-            case "Control":
+            case event.key === "Control":
                 {
-                    this.keyControl = {
-                        ...this.keyControl,
-                        Control: true,
-                    };
                     this.ctrlKeyMessageSpan.style.visibility = "visible";
                 }
                 break;
