@@ -33,6 +33,7 @@ class Main {
     };
     private usingFader: boolean = false;
     private usingKnob: boolean = false;
+    private isMIDIEdit: boolean = false;
     private midiMappingInUse: {
         callbackMap: CallbackMapping;
         recentlyUsed: MIDIInputName;
@@ -46,6 +47,7 @@ class Main {
         private readonly knob = new Knob(),
         private readonly midiSelector = new MIDISelector(),
         private readonly midiDeviceDisplay = new MIDIDeviceDisplay(),
+        private readonly toggleMIDIEditModeButton: HTMLButtonElement = document.createElement("button"),
         private readonly toggleUsingMIDIButton: HTMLButtonElement = document.createElement("button"),
         private readonly soundboardContainer: HTMLDivElement = document.createElement("div"),
         private readonly btnControlContainer: HTMLDivElement = document.createElement("div"),
@@ -213,6 +215,18 @@ class Main {
         }
     };
 
+    private handleMIDIEditModeButtonClick = (): void => {
+        this.isMIDIEdit = !this.isMIDIEdit;
+        console.log(this.isMIDIEdit);
+        if (this.isMIDIEdit) {
+            this.toggleMIDIEditModeButton.textContent = "MIDI Mapping Edit Mode ON";
+            this.toggleMIDIEditModeButton.style.backgroundColor = "green";
+        } else {
+            this.toggleMIDIEditModeButton.textContent = "MIDI Mapping Edit Mode OFF";
+            this.toggleMIDIEditModeButton.style.backgroundColor = "grey";
+        }
+    };
+
     private init(): void {
         document.head.appendChild(new Styles().tag);
 
@@ -239,7 +253,19 @@ class Main {
         this.header.innerText = "have fun with the soundboard!";
         this.header.classList.add("header");
 
-        this.body.appendChild(this.header);
+        this.toggleMIDIEditModeButton.textContent = "MIDI Mapping Edit Mode OFF";
+        const toggleMIDIEditButtonContainer = document.createElement("div");
+        toggleMIDIEditButtonContainer.style.display = "flex";
+        toggleMIDIEditButtonContainer.style.justifyContent = "center";
+        toggleMIDIEditButtonContainer.style.alignItems = "center";
+        toggleMIDIEditButtonContainer.style.marginBottom = "10px";
+        this.toggleMIDIEditModeButton.style.backgroundColor = "grey";
+        this.toggleMIDIEditModeButton.style.color = "white";
+        this.toggleMIDIEditModeButton.style.borderRadius = "5px";
+        this.toggleMIDIEditModeButton.onclick = this.handleMIDIEditModeButtonClick;
+        toggleMIDIEditButtonContainer.append(this.toggleMIDIEditModeButton);
+
+        this.body.append(this.header, toggleMIDIEditButtonContainer);
 
         const volumeLabel = document.createElement("p");
         volumeLabel.textContent = "Volume";
