@@ -1,6 +1,7 @@
 import { Storage } from "./Storage.js";
 import { btnIDB } from "./IDB.js";
-import { KeyControl, getRandomId } from "./index.js";
+import { KeyControl } from "./index.js";
+import { getRandomId } from "./utils.js";
 export type ButtonProps = {
     id: string;
     color: string;
