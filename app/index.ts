@@ -68,8 +68,11 @@ class Main {
     private initMIDI() {
         (async () => {
             const midiAccess = await MIDIController.requestMIDIAccess();
+            console.log("got midi", midiAccess);
             if (midiAccess) {
                 this.midiController = new MIDIController(midiAccess);
+                console.log("got midi", this.midiController);
+
                 if (this.midiController.inputs?.length) {
                     this.midiSelector.appendMIDIDeviceNames(this.midiController.inputs);
                     // define the callbacks for the inputs here

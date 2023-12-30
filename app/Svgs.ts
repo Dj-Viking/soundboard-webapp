@@ -106,7 +106,7 @@ export class Fader extends MySVG {
         this.gRect2.setAttribute("x", "5");
         this.gRect2.setAttribute("y", "0");
         this.gRect2.setAttribute("width", "18");
-        this.gRect2.setAttribute("height", "35");
+        this.gRect2.setAttribute("height", "37");
         this.gRect2.setAttribute("rx", "4");
         this.gRect2.setAttribute("stroke", "white");
         this.gRect2.setAttribute("stroke-width", "2");
@@ -134,17 +134,18 @@ export class Knob extends MySVG {
         private readonly rect1 = document.createElementNS("http://www.w3.org/2000/svg", "rect"),
         private readonly rect2 = document.createElementNS("http://www.w3.org/2000/svg", "rect"),
         private readonly rect3 = document.createElementNS("http://www.w3.org/2000/svg", "rect"),
-        private readonly path1 = document.createElementNS("http://www.w3.org/2000/svg", "path"),
-        private readonly path2 = document.createElementNS("http://www.w3.org/2000/svg", "path")
+        private readonly rect4 = document.createElementNS("http://www.w3.org/2000/svg", "rect"),
+        private readonly path1 = document.createElementNS("http://www.w3.org/2000/svg", "path")
     ) {
         super();
         // <svg width="91" height="106" viewBox="0 0 91 136" fill="none" xmlns="http://www.w3.org/2000/svg">
-        this.el.setAttribute("width", "91");
+        this.el.setAttribute("width", "40");
         this.el.setAttribute("height", "106");
         this.el.setAttribute("viewBox", "0 0 91 106");
         this.el.setAttribute("fill", "none");
         this.el.setAttribute("xmlns", "http://www.w3.org/2000/svg");
         this.el.style.display = "none";
+        this.el.style.marginLeft = "10px";
 
         this.circle.setAttribute("cx", "45.5");
         this.circle.setAttribute("cy", "61.5");
@@ -174,17 +175,18 @@ export class Knob extends MySVG {
         this.rect3.setAttribute("fill", "white");
         this.el.appendChild(this.rect3);
 
+        this.rect4.setAttribute("width", "4");
+        this.rect4.setAttribute("height", "16");
+        this.rect4.setAttribute("transform", "matrix(0.731235 -0.682126 -0.682126 -0.731235 85.9912 109.357)");
+        this.rect4.setAttribute("fill", "white");
+        this.el.appendChild(this.rect4);
+
         this.path1.setAttribute(
             "d",
             "M90.5 62C90.5 87.6967 70.3377 108.5 45.5 108.5C20.6623 108.5 0.5 87.6967 0.5 62C0.5 36.3033 20.6623 15.5 45.5 15.5C70.3377 15.5 90.5 36.3033 90.5 62Z"
         );
         this.path1.setAttribute("stroke", "white");
         this.el.appendChild(this.path1);
-
-        this.path2.setAttribute("d", "M72 95H23.5H17.5L3.5 110L16 135H74L86.5 111.5L81.5 105.5L72 95Z");
-        this.path2.setAttribute("fill", "black");
-        this.path2.setAttribute("stroke", "black");
-        this.el.appendChild(this.path2);
     }
 
     private translateKnobRect(intensity: number): string {
