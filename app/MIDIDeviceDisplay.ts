@@ -9,14 +9,7 @@ export class MIDIDeviceDisplay {
     public readonly container = document.createElement("div");
     public readonly controlDisplayContainer = document.createElement("div");
     public constructor(inputName?: MIDIInputName) {
-        this.container.style.display = "flex";
-        this.container.style.flexDirection = "column";
-        this.container.style.justifyContent = "center";
-        this.container.style.height = "auto";
-        this.container.style.width = "auto";
-        this.container.style.borderRadius = "10px";
-        this.container.style.marginBottom = "10px";
-        this.container.style.border = "solid green 3px";
+        this.container.classList.add("control-device-display-container");
 
         this.controlDisplayContainer.style.display = "block";
 

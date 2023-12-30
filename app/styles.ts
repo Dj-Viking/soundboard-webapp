@@ -11,6 +11,26 @@ export class Styles {
                 background-color: grey;
             }
 
+            .control-device-display-container {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                height: auto;
+                width: auto;
+                border-radius: 10px;
+                margin-bottom: 10px;
+                border: solid green 3px;
+            }
+        
+            .control-svg-container {
+                height: auto;
+                width: auto;
+                display: flex;
+                flex-direction: row;
+                justify-content: space-around;
+                align-items: center;
+            }
+
             .soundboard-container {
                 display: flex;
                 flex-wrap: wrap;

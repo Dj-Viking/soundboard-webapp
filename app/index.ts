@@ -259,12 +259,7 @@ class Main {
         };
 
         const controlSVGContainer = document.createElement("div");
-        controlSVGContainer.style.height = "auto";
-        controlSVGContainer.style.width = "auto";
-        controlSVGContainer.style.display = "flex";
-        controlSVGContainer.style.flexDirection = "row";
-        controlSVGContainer.style.justifyContent = "space-around";
-        controlSVGContainer.style.alignItems = "center";
+        controlSVGContainer.classList.add("control-svg-container");
 
         controlSVGContainer.append(this.fader.el, this.knob.el, this.midiDeviceDisplay.uiNameSpan);
 
