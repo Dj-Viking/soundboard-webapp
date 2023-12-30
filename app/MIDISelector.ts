@@ -1,5 +1,5 @@
-import { MIDIController } from "./MIDIController.js";
-import { getRandomId } from "./index.js";
+import { MIDIController, MIDIInputName } from "./MIDIController.js";
+import { getRandomId } from "./utils.js";
 
 export class MIDISelector {
     public constructor(public readonly selectEl: HTMLSelectElement = document.createElement("select")) {
@@ -24,5 +24,9 @@ export class MIDISelector {
             option.id = getRandomId();
             this.selectEl.appendChild(option);
         }
+    }
+
+    public selectDevice(inputName: MIDIInputName): void {
+        this.selectEl.value = inputName;
     }
 }

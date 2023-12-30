@@ -14,10 +14,21 @@ export class Styles {
             .soundboard-container {
                 display: flex;
                 flex-wrap: wrap;
+                margin: 0 auto;
                 height: ${this.SOUNDBOARD_DIM}px;
                 width: ${this.SOUNDBOARD_DIM}px;
                 background-color: white;
                 border-radius: 10px;
+            }
+
+            .volume-container {
+                display: flex;
+                margin: 0 auto;
+                height: auto;
+                width: auto;
+                flex-direction: column;
+                align-items: center;
+                margin-bottom: 10px;
             }
 
             .header {
@@ -36,7 +47,6 @@ export class Styles {
 
             .midi-selector {
                 width: 100%;
-                margin: 0 auto;
             }
 
             .btn-control-container {

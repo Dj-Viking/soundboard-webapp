@@ -2,11 +2,19 @@ import { Styles } from "./styles.js";
 import { Button } from "./Button.js";
 import { btnIDB } from "./IDB.js";
 import { Storage } from "./Storage.js";
-import { MIDIController } from "./MIDIController.js";
+import {
+    ControllerControlNamesLookup,
+    MIDIController,
+    MIDIInputName,
+    MIDIMessageEvent,
+    SUPPORTED_CONTROLLERS,
+    UIInterfaceDeviceName,
+} from "./MIDIController.js";
 import { MIDISelector } from "./MIDISelector.js";
-export function getRandomId(): string {
-    return (Math.random() * 10000).toString().replace(".", "_");
-}
+import { MIDIDeviceDisplay } from "./MIDIDeviceDisplay.js";
+import { CallbackMapping, MIDIMapping, MIDIMappingPreference } from "./MIDIMapping.js";
+import { Fader, Knob } from "./Svgs.js";
+
 export type KeyControl = Record<KeyboardKey, boolean>;
 class Main {
     private keyControl: KeyControl = {
@@ -19,10 +27,26 @@ class Main {
     private currentlyPlayingButton: Button | null = null;
     private allButtons: Record<Button["el"]["id"], Button> = {};
     private midiController: MIDIController = {} as any;
+    private isListeningForMIDIMappingEdits: boolean = false;
+    private mappingEditOptions = {
+        uiName: "" as any as UIInterfaceDeviceName,
+    };
+    private usingFader: boolean = false;
+    private usingKnob: boolean = false;
+    private midiMappingInUse: {
+        callbackMap: CallbackMapping;
+        recentlyUsed: MIDIInputName;
+        hasPreference: boolean;
+        midiMappingPreference: Record<MIDIInputName, MIDIMapping<MIDIInputName>>;
+    } = {} as any;
 
     public constructor(
         private readonly body: HTMLElement = document.body,
+        private readonly fader = new Fader(),
+        private readonly knob = new Knob(),
         private readonly midiSelector = new MIDISelector(),
+        private readonly midiDeviceDisplay = new MIDIDeviceDisplay(),
+        private readonly toggleUsingMIDIButton: HTMLButtonElement = document.createElement("button"),
         private readonly soundboardContainer: HTMLDivElement = document.createElement("div"),
         private readonly btnControlContainer: HTMLDivElement = document.createElement("div"),
         private readonly trackProgressBar: HTMLProgressElement = document.createElement("progress"),
@@ -48,10 +72,60 @@ class Main {
                 this.midiController = new MIDIController(midiAccess);
                 if (this.midiController.inputs?.length) {
                     this.midiSelector.appendMIDIDeviceNames(this.midiController.inputs);
+                    // define the callbacks for the inputs here
+                    this.setupMIDIMessageCallback();
                 }
             }
         })();
     }
+
+    private handleSvgMovement(
+        name: MIDIInputName,
+        intensity: number,
+        controlName: ControllerControlNamesLookup<typeof name>
+    ): void {
+        this.usingFader = /fader/g.test(controlName);
+        this.usingKnob = /knob/g.test(controlName);
+
+        this.fader.handleShow(this.usingFader);
+        if (this.usingFader) {
+            this.fader.moveSvgFromMessage(intensity);
+        }
+        this.knob.handleShow(this.usingKnob);
+        if (this.usingKnob) {
+            this.knob.moveSvgFromMessage(intensity);
+        }
+        this.midiController.recentlyUsed = name;
+        this.midiSelector.selectDevice(name);
+        this.midiDeviceDisplay.updateInput(name);
+    }
+
+    private setupMIDIMessageCallback = () => {
+        const midicb = (e: MIDIMessageEvent) => {
+            const channel = e.data[1];
+            const intensity = e.data[2];
+            const name = e.currentTarget.name;
+            const strippedName = MIDIController.stripNativeLabelFromMIDIInputName(e.currentTarget.name);
+
+            const uiName = (() => console.error("uiName", "TODO"))();
+
+            const controlName: ControllerControlNamesLookup<typeof strippedName> =
+                SUPPORTED_CONTROLLERS[strippedName][channel];
+
+            this.handleSvgMovement(name, intensity, controlName);
+
+            // move displayed svg rects
+
+            let midiMappingPreference: MIDIMappingPreference<typeof strippedName> = null as any;
+
+            if (this.isListeningForMIDIMappingEdits) {
+                console.error("listening for edits", "TODO");
+                console.log("listening for mapping edits");
+            }
+        };
+
+        this.midiController.setInputCbs(midicb, () => {});
+    };
 
     private animate = (_rafTimestamp?: number): void => {
         if (this.isPlaying) {
@@ -143,9 +217,6 @@ class Main {
             localStorage.setItem("buttons", JSON.stringify([]));
         }
 
-        document.addEventListener("drag", (e) => {
-            console.log("drag event", e);
-        });
         document.addEventListener("keydown", this.handleKeyDown as any);
         document.addEventListener("keyup", this.handleKeyUp);
 
@@ -160,7 +231,7 @@ class Main {
         this.volumeControlInput.style.width = "30%";
         this.volumeInputText.textContent = `${this.volumeControlInput.value}`;
         this.volumeInputText.style.fontSize = "20px";
-        this.volumeInputText.style.paddingLeft = "20px";
+        this.volumeInputText.style.color = "white";
 
         this.header.innerText = "have fun with the soundboard!";
         this.header.classList.add("header");
@@ -169,15 +240,49 @@ class Main {
 
         const volumeLabel = document.createElement("p");
         volumeLabel.textContent = "Volume";
+        volumeLabel.style.color = "white";
+
+        const volumeContainer = document.createElement("div");
+        volumeContainer.classList.add("volume-container");
+        volumeContainer.append(volumeLabel, this.volumeControlInput, this.volumeInputText);
 
         const midiSelectorContainer = document.createElement("div");
         midiSelectorContainer.classList.add("midi-selector-container");
+        midiSelectorContainer.style.visibility = "visible";
 
         this.midiSelector.selectEl.classList.add("midi-selector");
+        this.midiSelector.selectEl.onchange = (e: Event) => {
+            this.midiDeviceDisplay.updateInput(e.target!.value);
+        };
+
+        const controlSVGContainer = document.createElement("div");
+        controlSVGContainer.style.height = "auto";
+        controlSVGContainer.style.width = "auto";
+
+        controlSVGContainer.append(this.fader.el, this.knob.el);
+
+        this.midiDeviceDisplay.controlDisplayContainer.append(controlSVGContainer);
+
+        const toggleUsingMIDIButtonContainer = document.createElement("div");
+        toggleUsingMIDIButtonContainer.style.width = "100%";
+
+        //temp
+        toggleUsingMIDIButtonContainer.style.display = "none";
+
+        this.toggleUsingMIDIButton.textContent = "TURN ON MIDI";
+        this.toggleUsingMIDIButton.style.backgroundColor = "green";
+        this.toggleUsingMIDIButton.style.margin = "0 auto";
+
+        toggleUsingMIDIButtonContainer.append(this.toggleUsingMIDIButton);
 
         midiSelectorContainer.append(this.midiSelector.selectEl);
 
-        this.body.append(midiSelectorContainer, volumeLabel, this.volumeControlInput, this.volumeInputText);
+        this.body.append(
+            toggleUsingMIDIButtonContainer,
+            this.midiDeviceDisplay.container,
+            midiSelectorContainer,
+            volumeContainer
+        );
 
         this.btnControlContainer.classList.add("btn-control-container");
 
@@ -194,6 +299,7 @@ class Main {
         this.trackProgressBar.classList.add("track-progress");
 
         this.trackTimeTextSpan.textContent = "00:00:00 -- 00:00:00";
+        this.trackTimeTextSpan.style.color = "white";
 
         this.btnControlContainer.append(
             this.addButtonEl,
@@ -336,7 +442,7 @@ class Main {
     }
 
     public run(): void {
-        console.log("hello world");
+        console.log("hello woasdfasdfaspodifija;sldkfja;lsdkfj;lasdkjsrld");
     }
 }
 

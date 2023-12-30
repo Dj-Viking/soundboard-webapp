@@ -77,6 +77,13 @@ export interface MIDIMessageEvent {
     cancelBubble: boolean;
     composed: boolean;
     currentTarget: MIDIInput;
+    /**
+     * for the case of midi message events
+     * data[1] is the channel
+     * data[2] is the intensity
+     *
+     * for all intents and purposes we only really care about these indicies
+     */
     data: Uint8Array;
     defaultPrevented: boolean;
     eventPhase: number;
@@ -222,7 +229,7 @@ export const XONEK2_MIDI_CHANNEL_TABLE: XONEK2_MIDIChannelTable = {
     25: "4_n_button",
     26: "4_o_button",
     27: "4_p_button",
-};
+} as const;
 const possibleButtonNumbers = [1, 2, 3, 4, 5, 6, 7, 8] as const;
 export type ButtonName<N extends (typeof possibleButtonNumbers)[number]> = `button_${N}_position` | "resetTimerButton";
 
@@ -499,7 +506,7 @@ export const ULTRALITE_MK3_HYBRID_MIDI_PORT = {
 };
 
 export type Nullable<T> = null | T;
-export type ControllerName =
+export type MIDIInputName =
     | "Not Found"
     | "UltraLite mk3 Hybrid"
     | "XONE:K2 MIDI"
@@ -509,8 +516,7 @@ export type ControllerName =
     | "TouchOSC Bridge"
     | "UltraLite mk3 Hybrid Sync Port";
 
-export type MIDIInputName = string & keyof ControllerLookup<ControllerName>;
-export type ControllerLookup<Name extends ControllerName> = Record<
+export type ControllerLookup<Name extends MIDIInputName> = Record<
     Name,
     Name extends "XONE:K2 MIDI" //-------------------// if
         ? XONEK2_MIDIChannelTable //-----------------// then
@@ -559,6 +565,11 @@ export const SUPPORTED_CONTROLLERS = {
     "UltraLite mk3 Hybrid MIDI Port": ULTRALITE_MK3_HYBRID_MIDI_PORT,
     "TouchOSC Bridge": touchOsc_MIDI_CHANNEL_TABLE,
 } as const;
+
+export type ControllerControlNamesLookup<
+    K extends keyof typeof SUPPORTED_CONTROLLERS,
+    SecondKey extends keyof (typeof SUPPORTED_CONTROLLERS)[K] = keyof (typeof SUPPORTED_CONTROLLERS)[K]
+> = (typeof SUPPORTED_CONTROLLERS)[K][SecondKey];
 
 export const getControllerTableFromName = <N extends keyof typeof SUPPORTED_CONTROLLERS>(
     controllerName: N

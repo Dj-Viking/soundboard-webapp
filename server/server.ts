@@ -3,130 +3,45 @@ import fs from "node:fs";
 const PORT = process.env.PORT || 8080;
 console.log(`running server on http://localhost:${PORT}`);
 
-// TODO somehow condense this to serve all the files if they match a pattern or something
 const handleGetRequest: http.RequestListener = (req, res) => {
-    switch (req.url) {
-        case "/MIDISelector.js":
+    switch (true) {
+        case req.url?.includes(".js"):
             {
-                fs.readFile("./dist/app/MIDISelector.js", (err, data) => {
+                fs.readFile(`./dist/app/${req.url}`, (err, data) => {
                     if (err?.code === "ENOENT") {
-                        console.log("file not found?", err.message);
+                        console.log("\x1b[35m", "file not found\n", err.message, "\n", "\x1b[00m");
                         res.writeHead(404, "not found");
-                        res.end();
+                        res.end("not found");
                     }
-                    res.writeHead(200, { "Content-Type": "text/javascript" });
+
+                    const opts = { "Content-Type": "text/javascript" };
+
+                    res.writeHead(200, opts);
                     res.end(data, "utf-8");
                 });
             }
             break;
-        case "/MIDIMapping.js":
-            {
-                fs.readFile("./dist/app/MIDIMapping.js", (err, data) => {
-                    if (err?.code === "ENOENT") {
-                        console.log("file not found?", err.message);
-                        res.writeHead(404, "not found");
-                        res.end();
-                    }
-                    res.writeHead(200, { "Content-Type": "text/javascript" });
-                    res.end(data, "utf-8");
-                });
-            }
-            break;
-        case "/MIDIController.js":
-            {
-                fs.readFile("./dist/app/MIDIController.js", (err, data) => {
-                    if (err?.code === "ENOENT") {
-                        console.log("file not found?", err.message);
-                        res.writeHead(404, "not found");
-                        res.end();
-                    }
-                    res.writeHead(200, { "Content-Type": "text/javascript" });
-                    res.end(data, "utf-8");
-                });
-            }
-            break;
-        case "/IDB.js":
-            {
-                fs.readFile("./dist/app/IDB.js", (err, data) => {
-                    if (err?.code === "ENOENT") {
-                        console.log("file not found?", err.message);
-                        res.writeHead(404, "not found");
-                        res.end();
-                    }
-                    res.writeHead(200, { "Content-Type": "text/javascript" });
-                    res.end(data, "utf-8");
-                });
-            }
-            break;
-        case "/Storage.js":
-            {
-                fs.readFile("./dist/app/Storage.js", (err, data) => {
-                    if (err?.code === "ENOENT") {
-                        console.log("file not found?", err.message);
-                        res.writeHead(404, "not found");
-                        res.end();
-                    }
-                    res.writeHead(200, { "Content-Type": "text/javascript" });
-                    res.end(data, "utf-8");
-                });
-            }
-            break;
-        case "/Button.js":
-            {
-                fs.readFile("./dist/app/Button.js", (err, data) => {
-                    if (err?.code === "ENOENT") {
-                        console.log("file not found?", err.message);
-                        res.writeHead(404, "not found");
-                        res.end();
-                    }
-                    res.writeHead(200, { "Content-Type": "text/javascript" });
-                    res.end(data, "utf-8");
-                });
-            }
-            break;
-        case "/styles.js":
-            {
-                fs.readFile("./dist/app/styles.js", (err, data) => {
-                    if (err?.code === "ENOENT") {
-                        console.log("file not found?", err.message);
-                        res.writeHead(404, "not found");
-                        res.end();
-                    }
-                    res.writeHead(200, { "Content-Type": "text/javascript" });
-                    res.end(data, "utf-8");
-                });
-            }
-            break;
-        case "/index.js":
-            {
-                fs.readFile("./dist/app/index.js", (err, data) => {
-                    if (err?.code === "ENOENT") {
-                        console.log("file not found?", err.message);
-                        res.writeHead(404, "not found");
-                        res.end();
-                    }
-                    res.writeHead(200, { "Content-Type": "text/javascript" });
-                    res.end(data, "utf-8");
-                });
-            }
-            break;
-        case "/":
+        case req.url === "/":
             {
                 fs.readFile("./dist/app/index.html", (err, data) => {
                     if (err?.code === "ENOENT") {
-                        console.log("file not found?", err.message);
+                        console.log("\x1b[35m", "file not found\n", err.message, "\n", "\x1b[00m");
                         res.writeHead(404, "not found");
-                        res.end();
+                        res.end("not found");
                     }
-                    res.writeHead(200, { "Content-Type": "text/html" });
+
+                    const opts = { "Content-Type": "text/html" };
+
+                    res.writeHead(200, opts);
                     res.end(data, "utf-8");
                 });
             }
             break;
-        default:
+        default: {
             console.log("\x1b[35m", `[ERROR]: not found ${req.url}`, "\x1b[00m");
             res.writeHead(404);
-            res.end();
+            res.end("not found");
+        }
     }
 };
 
