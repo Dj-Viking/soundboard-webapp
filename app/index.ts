@@ -110,13 +110,13 @@ class Main {
             const name = e.currentTarget.name;
             const strippedName = MIDIController.stripNativeLabelFromMIDIInputName(e.currentTarget.name);
 
-            const uiName = (() => console.error("uiName", "TODO"))();
-
             const controlName: ControllerControlNamesLookup<typeof strippedName> =
                 SUPPORTED_CONTROLLERS[strippedName][channel];
 
             this.handleSvgMovement(name, intensity, controlName);
-
+            this.midiDeviceDisplay.channelSpan.textContent = "Channel: " + channel.toString();
+            this.midiDeviceDisplay.uiNameSpan.textContent = controlName;
+            this.midiDeviceDisplay.intensitySpan.textContent = "Intensity: " + intensity.toString();
             // move displayed svg rects
 
             let midiMappingPreference: MIDIMappingPreference<typeof strippedName> = null as any;
@@ -261,10 +261,14 @@ class Main {
         const controlSVGContainer = document.createElement("div");
         controlSVGContainer.style.height = "auto";
         controlSVGContainer.style.width = "auto";
+        controlSVGContainer.style.display = "flex";
+        controlSVGContainer.style.flexDirection = "row";
+        controlSVGContainer.style.justifyContent = "space-around";
+        controlSVGContainer.style.alignItems = "center";
 
-        controlSVGContainer.append(this.fader.el, this.knob.el);
+        controlSVGContainer.append(this.fader.el, this.knob.el, this.midiDeviceDisplay.uiNameSpan);
 
-        this.midiDeviceDisplay.controlDisplayContainer.append(controlSVGContainer);
+        this.midiDeviceDisplay.controlDisplayContainer.append(controlSVGContainer, this.midiDeviceDisplay.intensityDiv);
 
         const toggleUsingMIDIButtonContainer = document.createElement("div");
         toggleUsingMIDIButtonContainer.style.width = "100%";
