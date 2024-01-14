@@ -1,10 +1,10 @@
 import { Button } from "./Button.js";
-import { btnIDB } from "./IDB.js";
+import { btnIDB } from "./ButtonIDB.js";
 export class Storage {
     public static async getStorageButtons(): Promise<Array<Button["props"]>> {
         return new Promise<Array<Button["props"]>>((res) => {
             (async () => {
-                res((await btnIDB.handleRequest("getAll")) as Button["props"][]);
+                res((await btnIDB.getAll()) as Button["props"][]);
             })();
         });
     }
@@ -15,10 +15,7 @@ export class Storage {
 
         btnToUpdate.props = btn_.props;
 
-        Storage.setStorageButtons([
-            btnToUpdate.props,
-            ...btnsWithoutBtnToUpdate.map((btn) => btn.props),
-        ]);
+        Storage.setStorageButtons([btnToUpdate.props, ...btnsWithoutBtnToUpdate.map((btn) => btn.props)]);
     }
     public static setStorageButtons(btns: Array<Button["props"]>): void {
         localStorage.setItem("buttons", JSON.stringify(btns));

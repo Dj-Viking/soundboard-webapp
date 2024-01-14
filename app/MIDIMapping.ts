@@ -51,7 +51,7 @@ export type CallbackMapping = typeof DEFAULT_CALLBACK_TABLE;
  * const uiName = preference[midiname][controlName];
  * callbackMap[uiName]()
  */
-export class MIDIMappingPreference<N extends MIDIInputName> {
+export class MIDIMappingPreference<N extends MIDIInputName = any> {
     public name: N;
     public mapping: MIDIMapping<N> = {} as any;
     public callbackMap: CallbackMapping = {} as any;

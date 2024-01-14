@@ -1,5 +1,5 @@
 import { Storage } from "./Storage.js";
-import { btnIDB } from "./IDB.js";
+import { btnIDB } from "./ButtonIDB.js";
 import { KeyControl } from "./index.js";
 import { getRandomId } from "./utils.js";
 export type ButtonProps = {
@@ -53,7 +53,7 @@ export class Button {
                     file,
                 };
 
-                btnIDB.handleRequest("update", this.props);
+                btnIDB.update(this.props);
 
                 Storage.updateButton(this);
             }

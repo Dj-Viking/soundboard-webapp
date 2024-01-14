@@ -1,6 +1,6 @@
 import { Styles } from "./styles.js";
 import { Button } from "./Button.js";
-import { btnIDB } from "./IDB.js";
+import { btnIDB } from "./ButtonIDB.js";
 import { Storage } from "./Storage.js";
 import {
     ControllerControlNamesLookup,
@@ -415,7 +415,7 @@ class Main {
         Storage.getStorageButtons().then((storageButtons): void => {
             const btn = new Button({});
 
-            btnIDB.handleRequest("put", btn.props);
+            btnIDB.put(btn.props);
 
             storageButtons.push(btn.props);
 
@@ -459,7 +459,7 @@ class Main {
                         const filtered = btns.filter((sb) => sb.id !== btn.el.id);
                         const toDelete = btns.find((sb) => sb.id === btn.el.id);
                         Storage.setStorageButtons(filtered);
-                        btnIDB.handleRequest("delete", toDelete);
+                        btnIDB.delete(toDelete!);
                         this.soundboardContainer.removeChild(document.getElementById(btn.el.id)!);
                     });
                 }
