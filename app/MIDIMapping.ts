@@ -51,13 +51,15 @@ export type CallbackMapping = typeof DEFAULT_CALLBACK_TABLE;
  * const uiName = preference[midiname][controlName];
  * callbackMap[uiName]()
  */
-export class MIDIMappingPreference<N extends MIDIInputName = any> {
+export class MIDIMappingPreference<N extends MIDIInputName> {
+    public id: string;
     public name: N;
     public mapping: MIDIMapping<N> = {} as any;
     public callbackMap: CallbackMapping = {} as any;
 
     public constructor(name: N) {
         this.name = name;
+        this.id = name;
 
         this.#setMIDIMappingBasedOnInputName(name);
         // TODO: since functions can't be serialized into JSON for local storage

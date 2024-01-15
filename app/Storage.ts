@@ -1,23 +1,24 @@
 import { Button } from "./Button.js";
-import { btnIDB } from "./ButtonIDB.js";
+import { idb } from "./index.js";
 export class Storage {
+    // btnIDB: ButtonIDB;
+    public constructor() {
+        if (!window.localStorage.getItem("idb_version")) {
+            window.localStorage.setItem("idb_version", (1).toString());
+        }
+    }
+    public static setIDBVersionInLocalStorage(version: number): void {
+        window.localStorage.setItem("idb_version", version.toString());
+    }
+    public static getIDBVersionFromLocalStorage(): number {
+        return JSON.parse(window.localStorage.getItem("idb_version") as string);
+    }
     public static async getStorageButtons(): Promise<Array<Button["props"]>> {
         return new Promise<Array<Button["props"]>>((res) => {
             (async () => {
-                res((await btnIDB.getAll()) as Button["props"][]);
+                const buttons = await idb.getAll("buttons");
+                res(buttons as Button["props"][]);
             })();
         });
-    }
-    public static async updateButton(btn_: Button): Promise<void> {
-        const btns = (await Storage.getStorageButtons()).map((props) => new Button(props));
-        const btnsWithoutBtnToUpdate = btns.filter((btn) => btn.el.id !== btn_.el.id);
-        const btnToUpdate = btns.find((btn) => btn.el.id === btn_.el.id)!;
-
-        btnToUpdate.props = btn_.props;
-
-        Storage.setStorageButtons([btnToUpdate.props, ...btnsWithoutBtnToUpdate.map((btn) => btn.props)]);
-    }
-    public static setStorageButtons(btns: Array<Button["props"]>): void {
-        localStorage.setItem("buttons", JSON.stringify(btns));
     }
 }

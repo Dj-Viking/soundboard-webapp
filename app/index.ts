@@ -1,6 +1,5 @@
 import { Styles } from "./styles.js";
 import { Button } from "./Button.js";
-import { btnIDB } from "./ButtonIDB.js";
 import { Storage } from "./Storage.js";
 import {
     ControllerControlNamesLookup,
@@ -14,8 +13,13 @@ import {
 } from "./MIDIController.js";
 import { MIDISelector } from "./MIDISelector.js";
 import { MIDIDeviceDisplay } from "./MIDIDeviceDisplay.js";
-import { CallbackMapping, MIDIMapping, MIDIMappingPreference } from "./MIDIMapping.js";
+import { CallbackMapping, MIDIMappingPreference } from "./MIDIMapping.js";
 import { Fader, Knob } from "./Svgs.js";
+// import { MIDIMappingIDB } from "./MIDIMappingIDB.js";
+// import { ButtonIDB } from "./ButtonIDB.js";
+import { IDB } from "./IDB.js";
+
+export const idb = new IDB("soundboard", Storage.getIDBVersionFromLocalStorage() || 1);
 
 export type KeyControl = Record<KeyboardKey, boolean>;
 class Main {
@@ -121,8 +125,20 @@ class Main {
             // move displayed svg rects
 
             if (this.isListeningForMIDIMappingEdits) {
-                this.MidiMappingPreference = new MIDIMappingPreference(strippedName);
+                this.MidiMappingPreference = new MIDIMappingPreference<typeof strippedName>(strippedName);
+                // TODO: validate that the object store is already in IDB somehow
+                // ALSO validate somehow how many keys there are and keep track of that so we don't keep incrementing the version
+                // when we don't need to!!!!!!
+                idb.addObjectStore(strippedName, Storage);
+
+                // TODO: will have to handle not being able to store the functions in IDB because they are not cloneable
+
                 this.midiController.allMIDIMappingPreferences[strippedName] = this.MidiMappingPreference;
+
+                const cbmap = this.MidiMappingPreference.callbackMap;
+                this.MidiMappingPreference.callbackMap = {} as any;
+                idb.put(JSON.parse(JSON.stringify(this.MidiMappingPreference)), strippedName);
+                this.MidiMappingPreference.callbackMap = cbmap;
 
                 this.MidiMappingPreference.mapping[controlName] = {
                     channel,
@@ -414,16 +430,12 @@ class Main {
     private addNewButtonToBoard = (_event: MouseEvent) => {
         Storage.getStorageButtons().then((storageButtons): void => {
             const btn = new Button({});
-
-            btnIDB.put(btn.props);
-
+            idb.put(btn.props, "buttons");
             storageButtons.push(btn.props);
-
             btn.el.onclick = () => {
                 this.boardButtonClickHandler(this.keyControl, btn);
             };
             this.allButtons[btn.el.id] = btn;
-
             this.stopButtonEl.onclick = () => {
                 Object.values(this.allButtons).forEach((b) => {
                     b.audioEl.currentTime = 0;
@@ -433,10 +445,7 @@ class Main {
                     this.currentlyPlayingButton = null;
                 });
             };
-
             this.soundboardContainer.appendChild(btn.el);
-
-            Storage.setStorageButtons(storageButtons);
         });
     };
 
@@ -456,10 +465,8 @@ class Main {
             case keyControl.Control:
                 {
                     Storage.getStorageButtons().then((btns) => {
-                        const filtered = btns.filter((sb) => sb.id !== btn.el.id);
                         const toDelete = btns.find((sb) => sb.id === btn.el.id);
-                        Storage.setStorageButtons(filtered);
-                        btnIDB.delete(toDelete!);
+                        idb.delete(toDelete, "buttons");
                         this.soundboardContainer.removeChild(document.getElementById(btn.el.id)!);
                     });
                 }
