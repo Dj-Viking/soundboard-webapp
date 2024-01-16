@@ -50,6 +50,7 @@ class Main {
         private readonly knob = new Knob(),
         private readonly midiSelector = new MIDISelector(),
         private readonly midiDeviceDisplay = new MIDIDeviceDisplay(),
+        private readonly waitingforIDBsSlowAss: HTMLSpanElement = document.createElement("span"),
         private readonly toggleMIDIEditModeButton: HTMLButtonElement = document.createElement("button"),
         private readonly toggleUsingMIDIButton: HTMLButtonElement = document.createElement("button"),
         private readonly soundboardContainer: HTMLDivElement = document.createElement("div"),
@@ -125,28 +126,37 @@ class Main {
             // move displayed svg rects
 
             if (this.isListeningForMIDIMappingEdits) {
+                this.isListeningForMIDIMappingEdits = false;
                 this.MidiMappingPreference = new MIDIMappingPreference<typeof strippedName>(strippedName);
-                // TODO: validate that the object store is already in IDB somehow
-                // ALSO validate somehow how many keys there are and keep track of that so we don't keep incrementing the version
-                // when we don't need to!!!!!!
-                idb.addObjectStore(strippedName, Storage);
-
-                // TODO: will have to handle not being able to store the functions in IDB because they are not cloneable
-
-                this.midiController.allMIDIMappingPreferences[strippedName] = this.MidiMappingPreference;
-
-                const cbmap = this.MidiMappingPreference.callbackMap;
-                this.MidiMappingPreference.callbackMap = {} as any;
-                idb.put(JSON.parse(JSON.stringify(this.MidiMappingPreference)), strippedName);
-                this.MidiMappingPreference.callbackMap = cbmap;
-
+                // TODO: don't use the fucking IDB for storing the midi mappings. just use local storage for fuck's sake
+                // IDB is so goddamn slow to create a new store after an upgrade is needed on the idb itself
                 this.MidiMappingPreference.mapping[controlName] = {
                     channel,
                     uiName: this.mappingEditOptions.uiName,
                 };
 
-                console.log("midi mapping preference currently", this.MidiMappingPreference, "\n", this.midiController);
-                this.isListeningForMIDIMappingEdits = false;
+                this.midiController.allMIDIMappingPreferences[strippedName] = this.MidiMappingPreference;
+
+                const cbmap = this.MidiMappingPreference.callbackMap;
+                this.MidiMappingPreference.callbackMap = {} as any;
+                this.waitingforIDBsSlowAss.style.visibility = "visible";
+                idb.idbContainsStoreName(strippedName).then((result) => {
+                    if (result) {
+                        idb.update(JSON.parse(JSON.stringify(this.MidiMappingPreference)), strippedName);
+                    } else {
+                        idb.addObjectStore(strippedName, Storage, this.waitingforIDBsSlowAss);
+
+                        idb.put(JSON.parse(JSON.stringify(this.MidiMappingPreference)), strippedName);
+                    }
+                    this.MidiMappingPreference.callbackMap = cbmap;
+
+                    console.log(
+                        "midi mapping preference currently",
+                        this.MidiMappingPreference,
+                        "\n",
+                        this.midiController
+                    );
+                });
             }
 
             this.handleMIDIMessage(strippedName, e);
@@ -211,7 +221,6 @@ class Main {
             //update transport while playing
             this.refreshTrackProgress(this.currentlyPlayingButton!.audioEl);
         }
-
         window.requestAnimationFrame(this.animate);
     };
 
@@ -309,6 +318,8 @@ class Main {
 
         this.volumeControlInput.oninput = (e) => this.handleVolumeChange(e);
 
+        this.waitingforIDBsSlowAss.textContent = "Loading...";
+        this.waitingforIDBsSlowAss.style.visibility = "hidden";
         this.volumeControlInput.type = "range";
         this.volumeControlInput.min = "0";
         this.volumeControlInput.max = ".5";
@@ -344,7 +355,7 @@ class Main {
         this.toggleMIDIEditModeButton.onclick = this.handleMIDIEditModeButtonClick;
         toggleMIDIEditButtonContainer.append(this.toggleMIDIEditModeButton);
 
-        this.body.append(this.header, toggleMIDIEditButtonContainer);
+        this.body.append(this.header, this.waitingforIDBsSlowAss, toggleMIDIEditButtonContainer);
 
         const volumeLabel = document.createElement("p");
         volumeLabel.textContent = "Volume";

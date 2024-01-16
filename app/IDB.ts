@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { Button } from "./Button.js";
+import { MIDIInputName } from "./MIDIController.js";
+import { MIDIMapping, MIDIMappingPreference } from "./MIDIMapping.js";
 import { Storage } from "./Storage.js";
 // make this the abstract class to make new idb helpers based on their type
 
@@ -19,19 +21,25 @@ export class IDB<T = any> implements IIDB {
         this.initializeHelper();
     }
 
-    public addObjectStore(newStoreName: string, storage: typeof Storage): void {
+    public addObjectStore(newStoreName: string, storage: typeof Storage, loadingSpan: HTMLSpanElement): void {
         this.version++;
         storage.setIDBVersionInLocalStorage(this.version);
         const openRequest = window.indexedDB.open(this.dbName, this.version);
+        openRequest.onsuccess = () => {
+            loadingSpan.style.visibility = "hidden";
+        };
         openRequest.onupgradeneeded = (_e: IDBVersionChangeEvent) => {
             const tempDb = openRequest.result;
 
             tempDb.createObjectStore(newStoreName, { keyPath: "id" });
+            loadingSpan.style.visibility = "hidden";
         };
 
-        openRequest.onerror = () => {
-            console.error("ERROR during adding new object store open request");
+        openRequest.onerror = (e) => {
+            console.error("ERROR during adding new object store open request", e);
+            loadingSpan.style.visibility = "hidden";
         };
+        loadingSpan.style.visibility = "hidden";
     }
 
     protected initializeHelper(): void {
@@ -40,8 +48,9 @@ export class IDB<T = any> implements IIDB {
                 // console.info("on upgrade needed called with new version change", event);
 
                 let tempDb = request!.result;
-
-                tempDb.createObjectStore("buttons", { keyPath: "id" as keyof T as string });
+                if (!request.result.objectStoreNames.contains("buttons")) {
+                    tempDb.createObjectStore("buttons", { keyPath: "id" as keyof T as string });
+                }
             };
             request.onerror = (_event: Event) => {
                 console.error("an error occurred during the open request", event);
@@ -85,7 +94,7 @@ export class IDB<T = any> implements IIDB {
             this.openConnection().then((req) => {
                 req.onsuccess = () => {
                     this.openStore(req, storeName).then(([db, store, transaction]) => {
-                        const itemsReq: IDBRequest<Button["props"][]> = store.getAll();
+                        const itemsReq: IDBRequest<any[]> = store.getAll();
 
                         itemsReq.onsuccess = () => {
                             // TODO: redo update and switch on the object store names because they are different object types
@@ -104,6 +113,21 @@ export class IDB<T = any> implements IIDB {
 
                                             store.delete(item.id);
                                             store.put(btnToUpdate.props);
+                                        }
+                                    }
+                                    break;
+                                case storeName as MIDIInputName:
+                                    {
+                                        if (itemsReq.result.length > 0) {
+                                            const mappingToUpdate: MIDIMappingPreference<typeof storeName> =
+                                                itemsReq.result.find(
+                                                    (mm: MIDIMappingPreference<typeof storeName>) => mm.id === item.id
+                                                );
+                                            mappingToUpdate.mapping = item.mapping;
+                                            store.delete(item.id);
+                                            store.put(mappingToUpdate);
+                                        } else {
+                                            store.put(item);
                                         }
                                     }
                                     break;
@@ -159,6 +183,20 @@ export class IDB<T = any> implements IIDB {
                     });
                 };
             });
+        });
+    }
+
+    public async idbContainsStoreName(storeName: string): Promise<boolean> {
+        return new Promise<boolean>((resolve, reject) => {
+            let res = window.indexedDB.open(this.dbName);
+            res.onsuccess = () => {
+                const isPresent = res.result.objectStoreNames.contains(storeName);
+                resolve(isPresent);
+            };
+            res.onerror = (e) => {
+                console.error("failed to validate object store name is in idb", e);
+                reject();
+            };
         });
     }
 
