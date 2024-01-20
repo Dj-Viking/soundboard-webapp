@@ -1,9 +1,7 @@
-import { DefaultDeserializer } from "v8";
 import { Button } from "./Button.js";
 import { GenericControlName, MIDIInputName, UIInterfaceDeviceName } from "./MIDIController.js";
-import { MIDIMapping, MIDIMappingPreference } from "./MIDIMapping.js";
+import { MIDIMappingPreference } from "./MIDIMapping.js";
 import { idb } from "./index.js";
-import { getAllJSDocTagsOfKind } from "../node_modules/typescript/lib/typescript.js";
 // TODO: don't use IDB for storing the fucking midi mappings...  it takes too fucking long to add another object store because of the onupgradeneeded shit
 // use local storage instead
 export class Storage {
