@@ -21,27 +21,6 @@ export class IDB<T = any> implements IIDB {
         this.initializeHelper();
     }
 
-    public addObjectStore(newStoreName: string, storage: typeof Storage, loadingSpan: HTMLSpanElement): void {
-        this.version++;
-        storage.setIDBVersionInLocalStorage(this.version);
-        const openRequest = window.indexedDB.open(this.dbName, this.version);
-        openRequest.onsuccess = () => {
-            loadingSpan.style.visibility = "hidden";
-        };
-        openRequest.onupgradeneeded = (_e: IDBVersionChangeEvent) => {
-            const tempDb = openRequest.result;
-
-            tempDb.createObjectStore(newStoreName, { keyPath: "id" });
-            loadingSpan.style.visibility = "hidden";
-        };
-
-        openRequest.onerror = (e) => {
-            console.error("ERROR during adding new object store open request", e);
-            loadingSpan.style.visibility = "hidden";
-        };
-        loadingSpan.style.visibility = "hidden";
-    }
-
     protected initializeHelper(): void {
         this.openConnection().then((request) => {
             request.onupgradeneeded = (_event: IDBVersionChangeEvent) => {

@@ -104,8 +104,14 @@ export class MIDIMappingPreference<N extends MIDIInputName> {
                 };
             }
             case "button_1_position": {
-                this.createButtonCallback("ksdfkjd");
-                return () => {};
+                return () => {
+                    this.createButtonCallback("button id");
+                };
+            }
+            case "button_2_position": {
+                return () => {
+                    this.createButtonCallback("button id2");
+                };
             }
             default:
                 return (_midiIntensity: number) => void 0;

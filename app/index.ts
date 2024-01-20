@@ -15,11 +15,9 @@ import { MIDISelector } from "./MIDISelector.js";
 import { MIDIDeviceDisplay } from "./MIDIDeviceDisplay.js";
 import { CallbackMapping, MIDIMappingPreference } from "./MIDIMapping.js";
 import { Fader, Knob } from "./Svgs.js";
-// import { MIDIMappingIDB } from "./MIDIMappingIDB.js";
-// import { ButtonIDB } from "./ButtonIDB.js";
 import { IDB } from "./IDB.js";
 
-export const idb = new IDB("soundboard", Storage.getIDBVersionFromLocalStorage() || 1);
+export const idb = new IDB("soundboard", 1);
 
 export type KeyControl = Record<KeyboardKey, boolean>;
 class Main {
@@ -119,15 +117,30 @@ class Main {
             const controlName: ControllerControlNamesLookup<typeof strippedName> =
                 SUPPORTED_CONTROLLERS[strippedName][channel];
 
+            // move displayed svg rects
             this.handleSvgMovement(name, intensity, controlName);
             this.midiDeviceDisplay.channelSpan.textContent = "Channel: " + channel.toString();
             this.midiDeviceDisplay.controlNameSpan.textContent = controlName;
             this.midiDeviceDisplay.intensitySpan.textContent = "Intensity: " + intensity.toString();
-            // move displayed svg rects
+
+            if (Storage.getMIDIMappingFromStorage(strippedName)) {
+                if (this.MidiMappingPreference.name === "Not Found") {
+                    // currently using not found in app state
+                    // set up local state for using the one we are currently sending messages for
+                    const ret = Storage.getMIDIMappingFromStorage(strippedName)!;
+                    // @ts-ignore local storage is getting all really fucking FUCKED UP THE ENTIRE STRUCTURE IS PLACED INTO .id AND .mapping1!!! FUCK1!
+                    this.MidiMappingPreference = ret.id;
+                    // AND HAVE TO MAKE THE CALLBACK MAPPING HERE!!!!!!!!!!!! WHAT THE FUCK!!!!!!
+                    // WHY IS INTERACTING WITH LOCAL STORAGE SO FUCKED UP!~!!!!!
+                    this.MidiMappingPreference.callbackMap = ret.callbackMap;
+                }
+            } else if (!Storage.getMIDIMappingFromStorage(strippedName)) {
+                // isnt in storage yet so set it up in local before setting it up in storage while listening
+                this.MidiMappingPreference = new MIDIMappingPreference<typeof strippedName>(strippedName);
+            }
 
             if (this.isListeningForMIDIMappingEdits) {
                 this.isListeningForMIDIMappingEdits = false;
-                this.MidiMappingPreference = new MIDIMappingPreference<typeof strippedName>(strippedName);
                 // TODO: don't use the fucking IDB for storing the midi mappings. just use local storage for fuck's sake
                 // IDB is so goddamn slow to create a new store after an upgrade is needed on the idb itself
                 this.MidiMappingPreference.mapping[controlName] = {
@@ -137,26 +150,21 @@ class Main {
 
                 this.midiController.allMIDIMappingPreferences[strippedName] = this.MidiMappingPreference;
 
-                const cbmap = this.MidiMappingPreference.callbackMap;
-                this.MidiMappingPreference.callbackMap = {} as any;
-                this.waitingforIDBsSlowAss.style.visibility = "visible";
-                idb.idbContainsStoreName(strippedName).then((result) => {
-                    if (result) {
-                        idb.update(JSON.parse(JSON.stringify(this.MidiMappingPreference)), strippedName);
-                    } else {
-                        idb.addObjectStore(strippedName, Storage, this.waitingforIDBsSlowAss);
-
-                        idb.put(JSON.parse(JSON.stringify(this.MidiMappingPreference)), strippedName);
-                    }
-                    this.MidiMappingPreference.callbackMap = cbmap;
-
-                    console.log(
-                        "midi mapping preference currently",
+                // add to local storage here if it doesn't exist yet
+                if (!localStorage.getItem(strippedName)) {
+                    localStorage.setItem(strippedName, JSON.stringify(this.MidiMappingPreference));
+                } else {
+                    // otherwise update it
+                    const ret = Storage.updateMIDIMappingInStorage(
                         this.MidiMappingPreference,
-                        "\n",
-                        this.midiController
+                        controlName,
+                        channel,
+                        this.mappingEditOptions.uiName
                     );
-                });
+                    this.MidiMappingPreference = ret;
+                }
+
+                console.log("midi mapping preference currently", this.MidiMappingPreference, "\n", this.midiController);
             }
 
             this.handleMIDIMessage(strippedName, e);
@@ -203,7 +211,8 @@ class Main {
                 {
                     const callbackMap = this.MidiMappingPreference.callbackMap;
                     const mapping = this.MidiMappingPreference.mapping;
-                    const callback = callbackMap[mapping[XONEK2_MIDI_CHANNEL_TABLE[channel]].uiName];
+                    // optional chain here to just let it warn that we haven't set up any mappings yet
+                    const callback = callbackMap[mapping[XONEK2_MIDI_CHANNEL_TABLE[channel]]?.uiName];
 
                     if (this.warnCallbackIfError(callback, mapping, channel, name)) {
                         callback(intensity);
