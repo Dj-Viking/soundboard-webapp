@@ -14,9 +14,9 @@ const handleGetRequest: http.RequestListener = (req, res) => {
                         res.end("not found");
                     }
 
-                    const opts = { "Content-Type": "text/javascript" };
+                    const headers = { "Content-Type": "text/javascript" };
 
-                    res.writeHead(200, opts);
+                    res.writeHead(200, headers);
                     res.end(data, "utf-8");
                 });
             }
@@ -30,9 +30,9 @@ const handleGetRequest: http.RequestListener = (req, res) => {
                         res.end("not found");
                     }
 
-                    const opts = { "Content-Type": "text/html" };
+                    const headers = { "Content-Type": "text/html" };
 
-                    res.writeHead(200, opts);
+                    res.writeHead(200, headers);
                     res.end(data, "utf-8");
                 });
             }
